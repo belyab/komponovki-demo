@@ -39,17 +39,17 @@
   const saved = Object.fromEntries(Object.keys(scenarios).map(id => [id, defaults(id)]));
   const savedTemplates = new Map();
 
-  function art(id, config, editable = false) {
+  function art(id, config, editable = false, visuals) {
     const { cameras, material } = scenarios[id];
     const adjustable = editable && material && (config.kind !== 'half' || cameras > 1);
     const cameraBase = editable ? '<img class="panel-art-base" src="assets/0d8b6.png" alt="" draggable="false">' : '';
     const materialBase = editable ? '<img class="panel-art-base" src="assets/b082a.png" alt="" draggable="false">' : '';
     const cameraImage = cameraBase + '<img src="assets/55be3.png" alt="" draggable="false">';
-    const materialImage = materialBase + '<img src="assets/c9824.png" alt="" draggable="false">';
+    const materialImage = visuals?.material ?? (materialBase + '<img src="assets/c9824.png" alt="" draggable="false">');
     const windows = Array.from({ length: cameras }, (_, index) =>
       editable
         ? '<button type="button" class="camera-window" data-camera="' + index + '" aria-label="Форма камеры ' + (index + 1) + '">' + cameraImage + '</button>'
-        : '<span class="camera-window">' + cameraImage + '</span>'
+        : '<span class="camera-window">' + (visuals ? visuals.camera(index) : cameraImage) + '</span>'
     ).join('');
     const kind = !cameras ? 'material' : config.kind;
     return '<div class="composition-art" data-kind="' + kind + '" data-count="' + cameras + '" data-shape="' + config.shape +
@@ -348,6 +348,14 @@
     gesture = null;
     skipClick = false;
     renderCards(id, true);
+  });
+
+  window.webinarLayouts = Object.freeze({
+    draw(id, { template, shape, corner, size, ...visuals }) {
+      const config = scenarios[id].material && scenarios[id].cameras
+        ? templates[template] : defaults(id);
+      return art(id, { ...config, shape, corner: corner ?? config.corner, size: size ?? config.size }, false, visuals);
+    },
   });
 
   renderCards();

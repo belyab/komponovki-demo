@@ -7,10 +7,12 @@
   <link rel="stylesheet" href="style.css">
   <script src="prototype.js" defer></script>
   <script src="layouts.js" defer></script>
+  <link rel="stylesheet" href="broadcast.css">
+  <script src="broadcast.js" defer></script>
 </head>
 <body>
-  <main class="prototype">
-    <section class="desktop" aria-label="Карточка вебинара">
+  <main class="prototype" data-window-size="standard">
+    <section class="desktop" id="webinar-card" aria-label="Карточка вебинара">
       <div class="webinar">
         <header class="banner">
           <div class="actions"><button id="save">Сохранить <span class="kit-icon" aria-hidden="true">&#xe616;</span></button><button id="publish">Опубликовать</button></div>
@@ -40,8 +42,10 @@
               </div>
             </section>
             <section class="layouts">
-              <h2>Компоновки</h2>
-              <p>Настройте вид участников и демонстрации в эфире</p>
+              <header class="layouts-heading">
+                <h2>Компоновки</h2>
+                <p>Настройте вид участников и демонстрации в эфире</p>
+              </header>
               <div id="layouts" class="layout-grid"></div>
             </section>
           </div>
@@ -92,13 +96,104 @@
         <div id="layout-options" hidden></div>
       </dialog>
     </section>
+    <section class="desktop broadcast" id="webinar-broadcast" aria-label="Трансляция вебинара" hidden>
+      <div class="broadcast-main">
+        <header class="broadcast-header">
+          <h1>Kinfolk: Тихие рецепты и истории</h1>
+          <div class="broadcast-actions">
+            <span id="broadcast-timer" class="broadcast-timer">• 03:52</span>
+            <span id="broadcast-pause" class="broadcast-icon" aria-label="Пауза">&#xe639;</span>
+            <span id="broadcast-end">Завершить</span>
+          </div>
+        </header>
+        <div class="broadcast-stage" id="broadcast-stage" aria-label="Сцена трансляции"></div>
+        <div class="broadcast-slides" id="broadcast-slides" aria-label="Слайд 1" hidden>
+          <span class="broadcast-slide-arrow" aria-hidden="true"></span>
+          <span class="broadcast-slide-number">1</span>
+          <span class="slide-track" aria-hidden="true"></span>
+          <span class="broadcast-slide-arrow" aria-hidden="true"></span>
+        </div>
+      </div>
+      <aside class="broadcast-tools" aria-label="Панель трансляции">
+        <div class="broadcast-tools-group">
+          <span class="broadcast-icon" title="Материалы">&#xe93d;</span>
+          <span class="broadcast-icon" title="Чат">&#xe90f;</span>
+          <span class="broadcast-icon" title="Вопросы">&#xeb3c;</span>
+          <span class="broadcast-icon" title="Опросы">&#xe9a6;</span>
+          <span class="broadcast-icon" title="Участники">&#xeb6b;</span>
+        </div>
+        <div class="broadcast-tools-group">
+          <span class="broadcast-icon broadcast-mic broadcast-active" id="broadcast-mic" aria-label="Микрофон">&#xe9b1;</span>
+          <span class="broadcast-icon broadcast-active" id="broadcast-camera" aria-label="Камера">&#xe6a0;</span>
+          <span class="broadcast-icon" title="Звук">&#xe90e;</span>
+          <span class="broadcast-icon" title="Доска рисования">&#xeabd;</span>
+          <span class="broadcast-icon" id="broadcast-share" aria-label="Показывать презентацию">&#xe730;</span>
+          <span class="broadcast-icon" title="Настройки">&#xe61b;</span>
+          <span class="broadcast-quality" title="Качество трансляции">99%</span>
+        </div>
+      </aside>
+    </section>
     <aside class="system" aria-label="Настройки прототипа">
       <div class="device"><img src="assets/78a2d.svg" alt=""></div>
-      <p class="device-label">1024×768&nbsp; ноутбук (16:10)</p>
+      <label class="device-label preview-size">Размер окна
+        <select id="preview-window-size">
+          <option value="standard">1024 × 768 (4:3)</option>
+          <option value="wide">1280 × 720 (16:9)</option>
+        </select>
+      </label>
       <div class="options">
-        <div class="option"><label><input type="radio" name="view" checked>Типовое представление</label></div>
+        <div class="option">
+          <label><input type="radio" name="view" value="card" checked>Карточка вебинара</label>
+          <label><input type="radio" name="view" value="broadcast">Трансляция вебинара</label>
+        </div>
       </div>
-      <footer><div class="status"><span class="kit-icon" aria-hidden="true">&#xe651;</span> Не показывали</div><div>Вкладка Компоновки</div><div class="credit"><span>Design</span> Байгулова Эльмира</div><div><span>Developer</span></div></footer>
+      <form id="broadcast-controls" class="options" hidden>
+        <fieldset class="broadcast-option">
+          <legend>Компоновка</legend>
+          <div class="option">
+            <label><input type="radio" name="scene" value="cameras" checked>Только ведущие</label>
+            <label><input type="radio" name="scene" value="both">Презентация + выступающие</label>
+            <label><input type="radio" name="scene" value="material">Только презентация</label>
+          </div>
+        </fieldset>
+        <fieldset class="broadcast-option" id="broadcast-shape-options">
+          <legend>Форма</legend>
+          <div class="option">
+            <label><input type="radio" name="shape" value="rectangle" checked>Прямоугольник</label>
+            <label><input type="radio" name="shape" value="square">Квадрат</label>
+            <label><input type="radio" name="shape" value="circle">Круг</label>
+          </div>
+        </fieldset>
+        <label class="option broadcast-template" id="broadcast-template-options" hidden>Шаблон
+          <select name="template">
+            <option value="0">Камера рядом с презентацией</option>
+            <option value="1">Прямоугольник поверх</option>
+            <option value="2">Круг поверх</option>
+            <option value="3">Поровну 50/50</option>
+          </select>
+        </label>
+        <label class="option broadcast-template" id="broadcast-position-options" hidden>Положение камер
+          <select name="position">
+            <option value="tl">Сверху слева</option>
+            <option value="tr" selected>Сверху справа</option>
+            <option value="bl">Снизу слева</option>
+            <option value="br">Снизу справа</option>
+          </select>
+        </label>
+        <label class="option broadcast-template" id="broadcast-size-options" hidden>Размер камер
+          <select name="cameraSize">
+            <option value="small">Маленький</option>
+            <option value="standard" selected>Стандартный</option>
+            <option value="maximum">Максимальный</option>
+          </select>
+        </label>
+        <fieldset class="broadcast-option broadcast-count" id="broadcast-count-options">
+          <legend>Количество камер</legend>
+          <label><input type="radio" name="count" value="1" checked><span>1</span></label>
+          <label><input type="radio" name="count" value="4"><span>4</span></label>
+        </fieldset>
+      </form>
+      <footer id="card-system-footer"><div class="status"><span class="kit-icon" aria-hidden="true">&#xe651;</span> Не показывали</div><div>Вкладка Компоновки</div><div class="credit"><span>Design</span> Байгулова Эльмира</div><div><span>Developer</span></div></footer>
     </aside>
   </main>
   <dialog id="dialog"><form method="dialog"><button class="dialog-close" aria-label="Закрыть"><span class="kit-icon" aria-hidden="true">&#xe66c;</span></button></form><h2></h2><div id="dialog-content"></div></dialog>

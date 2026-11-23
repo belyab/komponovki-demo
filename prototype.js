@@ -32,3 +32,8 @@ byId('close').addEventListener('click', () => {
   byId('close').innerHTML = webinar.hidden ? icon('eb9e') : '<img src="assets/a9caf.svg" alt="">';
   byId('close').setAttribute('aria-label', webinar.hidden ? 'Открыть панель' : 'Закрыть панель');
 });
+
+
+byId('preview-window-size').addEventListener('change', event => {
+  document.querySelector('.prototype').dataset.windowSize = event.target.value;
+});
