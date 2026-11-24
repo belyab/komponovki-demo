@@ -151,6 +151,7 @@ dialog{border:0;border-radius:14px;padding:20px;box-shadow:0 12px 56px #0003;min
 }
 .composition-art {
   --camera-inset: 4px;
+  --camera-size: var(--camera-request);
   --camera-width: var(--camera-size);
   --material-offset: calc(var(--camera-width) + var(--camera-inset));
   position: relative;
@@ -233,11 +234,6 @@ dialog{border:0;border-radius:14px;padding:20px;box-shadow:0 12px 56px #0003;min
 [data-corner^="b"] .camera-windows { bottom: 0; }
 [data-kind="side"][data-corner$="r"] .material-slot { right: var(--material-offset); }
 [data-kind="side"][data-corner$="l"] .material-slot { left: var(--material-offset); }
-.composition-tile [data-kind="side"]:not([data-even]) .camera-windows {
-  top: 50%;
-  bottom: auto;
-  transform: translateY(-50%);
-}
 
 [data-even] {
   --camera-width: calc((100cqw - 4px) / 2);
@@ -384,8 +380,9 @@ dialog{border:0;border-radius:14px;padding:20px;box-shadow:0 12px 56px #0003;min
   border-radius: 12px;
   box-shadow: 0 0 4px #0000000f;
 }
+.layout-card .composition-art { --camera-size: max(var(--camera-request), calc(144 / 604 * 100cqw)); }
+#layout-stage .composition-art { --camera-size: max(var(--camera-request), min(144px, 50cqw)); }
 #layout-stage [data-kind="side"]:not([data-even]) {
-  --camera-width: calc(var(--camera-size) * 1.0365);
   --material-offset: calc(var(--camera-width) + 6px);
 }
 #layout-stage [data-kind="side"]:not([data-even])[data-corner$="r"] .camera-windows { right: 1px; }
@@ -393,10 +390,10 @@ dialog{border:0;border-radius:14px;padding:20px;box-shadow:0 12px 56px #0003;min
 #layout-stage [data-kind="side"]:not([data-even])[data-corner^="t"] .camera-windows { top: 1px; }
 #layout-stage [data-kind="side"]:not([data-even])[data-corner^="b"] .camera-windows { bottom: 1px; }
 #layout-stage [data-kind="side"]:not([data-even])[data-count="4"] {
-  --camera-width: min(calc(var(--camera-size) * 1.0365), calc((100cqh - 13px) / 4));
+  --camera-width: min(var(--camera-size), calc((100cqh - 13px) / 4));
 }
 #layout-stage [data-kind="side"]:not([data-even])[data-count="4"][data-shape="rectangle"] {
-  --camera-width: min(calc(var(--camera-size) * 1.0365), calc((100cqh - 13px) * 16 / 36));
+  --camera-width: min(var(--camera-size), calc((100cqh - 13px) * 16 / 36));
 }
 #layout-stage [data-kind="side"]:not([data-even])[data-count="4"] .camera-window { max-width: none; }
 #layout-stage [data-dragging] .camera-windows {

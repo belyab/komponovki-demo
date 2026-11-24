@@ -53,7 +53,7 @@
     ).join('');
     const kind = !cameras ? 'material' : config.kind;
     return '<div class="composition-art" data-kind="' + kind + '" data-count="' + cameras + '" data-shape="' + config.shape +
-      '" data-corner="' + (config.corner ?? 'tr') + '"' + (kind === 'half' || (kind === 'side' && config.size === 50) ? ' data-even' : '') + ' style="--camera-size:' + (config.size ?? 23) + 'cqw"><div class="composition-panels">' +
+      '" data-corner="' + (config.corner ?? 'tr') + '"' + (kind === 'half' || (kind === 'side' && config.size === 50) ? ' data-even' : '') + ' style="--camera-request:' + (config.size ?? 23) + 'cqw"><div class="composition-panels">' +
       (material ? '<div class="material-slot"><div class="material-window">' + materialImage + '</div></div>' : '') +
       (cameras ? '<div class="camera-windows">' + windows +
         (adjustable ? Object.entries(resizeEdges).map(([edge, label]) =>
@@ -256,11 +256,18 @@
     const gap = 4 * (count - 1);
     const inset = gap + (side ? 1 : config.kind === 'overlay' ? 8 : 0);
     const aspect = config.shape === 'rectangle' ? 16 / 9 : 1;
-    const scale = side ? 1.0365 : 1;
     const available = (bounds.height - inset) / count;
     const laneWidth = config.kind === 'half' ? (bounds.width - 4) / 2 : bounds.width;
     const maxWidth = Math.min(laneWidth, available * aspect);
-    return Math.min(50, Math.floor(maxWidth / scale / bounds.width * 10000) / 100);
+    return Math.min(50, Math.floor(maxWidth / bounds.width * 10000) / 100);
+  }
+
+  function resizeCamera(config, bounds, delta) {
+    const maximum = maxCameraSize(config, bounds);
+    const minimum = Math.min(maximum, 144 / bounds.width * 100);
+    const initial = Math.max(minimum, Math.min(maximum, config.size));
+    const size = Math.max(minimum, Math.min(maximum, initial + delta));
+    return { size, next: size === initial ? config : customizeCamera(config, 'size', size) };
   }
 
   stage.addEventListener('keydown', event => {
@@ -269,11 +276,10 @@
     event.preventDefault();
     const increase = { left: 'ArrowLeft', right: 'ArrowRight', top: 'ArrowUp', bottom: 'ArrowDown' };
     const config = history[step];
-    const limit = maxCameraSize(config, stage.firstElementChild.getBoundingClientRect());
-    const initialSize = Math.min(config.size, limit);
-    const size = Math.max(12, Math.min(limit, initialSize + (event.key === increase[edge] ? 1 : -1)));
-    if (size === initialSize) return;
-    update(customizeCamera(config, 'size', size));
+    const bounds = stage.firstElementChild.getBoundingClientRect();
+    const { next } = resizeCamera(config, bounds, event.key === increase[edge] ? 1 : -1);
+    if (next === config) return;
+    update(next);
     stage.querySelector('[data-resize="' + edge + '"]').focus();
   });
 
@@ -308,12 +314,10 @@
       const horizontal = edge === 'left' || edge === 'right';
       const movement = horizontal ? dx : dy * cameraBox.width / cameraBox.height;
       const direction = edge === 'left' || edge === 'top' ? -1 : 1;
-      const limit = maxCameraSize(config, bounds);
-      const initialSize = Math.min(config.size, limit);
       const delta = Math.round(direction * movement / bounds.width * 100);
-      const size = Math.max(12, Math.min(limit, initialSize + delta));
-      gesture.next = size === initialSize ? config : customizeCamera(config, 'size', size);
-      art.style.setProperty('--camera-size', size + 'cqw');
+      const { size, next } = resizeCamera(config, bounds, delta);
+      gesture.next = next;
+      art.style.setProperty('--camera-request', size + 'cqw');
       art.toggleAttribute('data-even', config.kind === 'side' && size === 50);
       return;
     }
