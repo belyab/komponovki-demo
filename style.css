@@ -126,7 +126,7 @@ dialog{border:0;border-radius:14px;padding:20px;box-shadow:0 12px 56px #0003;min
 .composition-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
 .composition-tile { position: relative; min-width: 0; container-type: inline-size; }
 .composition-tile .layout-card {
-  --tile-inset: 5px;
+  --tile-inset: 8px;
   height: calc((100cqw - 2 * var(--tile-inset)) * 9 / 16 + 2 * var(--tile-inset));
   padding: calc(var(--tile-inset) - 1px);
 }
@@ -205,9 +205,18 @@ dialog{border:0;border-radius:14px;padding:20px;box-shadow:0 12px 56px #0003;min
   width: var(--camera-width);
   justify-items: center;
 }
-.camera-window { width: 100%; aspect-ratio: 16/9; }
-[data-shape="square"] .camera-window, [data-shape="circle"] .camera-window { aspect-ratio: 1; }
-[data-shape="circle"] .camera-window { border-radius: 50%; }
+.camera-window { position: relative; width: 100%; aspect-ratio: 16 / 9; }
+.camera-picture { position: absolute; inset: 0; overflow: hidden; border-radius: inherit; }
+.camera-window .camera-picture img { position: absolute; inset: 0; }
+:is([data-shape="square"], [data-shape="circle"]) .camera-window { background: transparent; }
+:is([data-shape="square"], [data-shape="circle"]) .camera-picture {
+  inset: 0 auto auto 50%;
+  height: 100%;
+  aspect-ratio: 1;
+  transform: translateX(-50%);
+  border-radius: 0;
+}
+[data-shape="circle"] .camera-picture { border-radius: 50%; }
 [data-kind="camera"] .camera-windows {
   inset: 0;
   margin: auto;
@@ -221,12 +230,7 @@ dialog{border:0;border-radius:14px;padding:20px;box-shadow:0 12px 56px #0003;min
   --camera-cell: min(calc((100cqw - 4px) / 2), calc((100cqh - 4px) * 8 / 9));
   grid-template-columns: repeat(2, var(--camera-cell));
 }
-[data-kind="camera"][data-count="4"]:not([data-shape="rectangle"]) .camera-windows {
-  --camera-cell: calc((min(100cqw, 100cqh) - 4px) / 2);
-}
 [data-kind="camera"] .camera-window { max-width: min(100%, calc(100cqh * 16 / 9)); }
-[data-kind="camera"][data-shape="square"] .camera-window,
-[data-kind="camera"][data-shape="circle"] .camera-window { max-width: 96cqh; }
 [data-kind="camera"][data-count="4"] .camera-window { max-width: none; }
 [data-corner$="l"] .camera-windows { left: 0; }
 [data-corner$="r"] .camera-windows { right: 0; }
@@ -236,7 +240,7 @@ dialog{border:0;border-radius:14px;padding:20px;box-shadow:0 12px 56px #0003;min
 [data-kind="side"][data-corner$="l"] .material-slot { left: var(--material-offset); }
 
 [data-even] {
-  --camera-width: calc((100cqw - 4px) / 2);
+  --camera-width: min(calc((100cqw - 4px) / 2), calc(100cqh * 16 / 9));
   --demo-width: var(--camera-width);
   --common-height: min(100cqh, calc(var(--demo-width) * 9 / 16));
 }
@@ -249,18 +253,10 @@ dialog{border:0;border-radius:14px;padding:20px;box-shadow:0 12px 56px #0003;min
   justify-content: center;
 }
 [data-even][data-corner$="l"] .composition-panels { grid-template-columns: var(--camera-width) var(--demo-width); }
-[data-even][data-shape="square"], [data-even][data-shape="circle"] {
-  --common-height: min(100cqh, calc((100cqw - 4px) * 9 / 25));
-  --camera-width: var(--common-height);
-  --demo-width: calc(var(--common-height) * 16 / 9);
-}
 [data-even][data-count="4"] {
-  --camera-width: calc((100cqw - 4px) / 2);
+  --camera-width: min(calc((100cqw - 4px) / 2), calc(100cqh * 16 / 9));
   --demo-width: var(--camera-width);
   --common-height: min(100cqh, calc(var(--demo-width) * 9 / 16));
-  --stack-width: min(var(--camera-size), var(--camera-width), calc((100cqh - 12px) / 4));
-}
-[data-even][data-count="4"][data-shape="rectangle"] {
   --stack-width: min(var(--camera-size), var(--camera-width), calc((100cqh - 12px) * 16 / 36));
 }
 [data-even] .material-slot,
@@ -275,20 +271,13 @@ dialog{border:0;border-radius:14px;padding:20px;box-shadow:0 12px 56px #0003;min
 [data-even] .camera-windows { grid-column: 2; align-content: center; }
 [data-even][data-corner$="l"] .material-slot { grid-column: 2; }
 [data-even][data-corner$="l"] .camera-windows { grid-column: 1; }
-[data-even][data-count="1"] .camera-window { height: 100%; }
 
 [data-count="4"]:not([data-kind="camera"]) .camera-window {
-  max-width: calc((100cqh - 20px) / 4);
-}
-[data-count="4"][data-shape="rectangle"]:not([data-kind="camera"]) .camera-window {
   max-width: calc((100cqh - 20px) * 16 / 36);
 }
 [data-kind="overlay"] .camera-windows { margin: var(--camera-inset); }
-[data-kind="overlay"] .camera-window { box-shadow: 0 0 6px #0002; }
-[data-kind="overlay"][data-count="4"] .camera-windows { max-width: calc((100cqh - 20px) / 4); }
-[data-kind="overlay"][data-count="4"][data-shape="rectangle"] .camera-windows {
-  max-width: calc((100cqh - 20px) * 16 / 36);
-}
+[data-kind="overlay"] .camera-picture { box-shadow: 0 0 6px #0002; }
+[data-kind="overlay"][data-count="4"] .camera-windows { max-width: calc((100cqh - 20px) * 16 / 36); }
 
 [data-even].composition-art .material-slot { inset: auto; }
 [data-even][data-count="4"] .camera-windows {
@@ -390,9 +379,6 @@ dialog{border:0;border-radius:14px;padding:20px;box-shadow:0 12px 56px #0003;min
 #layout-stage [data-kind="side"]:not([data-even])[data-corner^="t"] .camera-windows { top: 1px; }
 #layout-stage [data-kind="side"]:not([data-even])[data-corner^="b"] .camera-windows { bottom: 1px; }
 #layout-stage [data-kind="side"]:not([data-even])[data-count="4"] {
-  --camera-width: min(var(--camera-size), calc((100cqh - 13px) / 4));
-}
-#layout-stage [data-kind="side"]:not([data-even])[data-count="4"][data-shape="rectangle"] {
   --camera-width: min(var(--camera-size), calc((100cqh - 13px) * 16 / 36));
 }
 #layout-stage [data-kind="side"]:not([data-even])[data-count="4"] .camera-window { max-width: none; }
@@ -408,7 +394,6 @@ dialog{border:0;border-radius:14px;padding:20px;box-shadow:0 12px 56px #0003;min
 #layout-stage [data-even][data-count="4"][data-dragging] .camera-windows { width: var(--stack-width); }
 #layout-stage .camera-window { position: relative; }
 #layout-stage .panel-art-base { position: absolute; inset: 0; }
-#layout-stage .panel-art-base + img { position: relative; }
 #layout-stage .material-window .panel-art-base { object-fit: contain; }
 #layout-stage button[data-camera] { touch-action: none; }
 #layout-stage :not([data-kind="camera"]) .camera-window { cursor: grab; }

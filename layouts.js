@@ -40,20 +40,22 @@
   const savedTemplates = new Map();
 
   function art(id, config, editable = false, visuals) {
-    const { cameras, material } = scenarios[id];
+    const { cameras: defaultCount, material } = scenarios[id];
+    const cameras = visuals?.slots ?? defaultCount;
     const adjustable = editable && material && (config.kind !== 'half' || cameras > 1);
     const cameraBase = editable ? '<img class="panel-art-base" src="assets/0d8b6.png" alt="" draggable="false">' : '';
     const materialBase = editable ? '<img class="panel-art-base" src="assets/b082a.png" alt="" draggable="false">' : '';
-    const cameraImage = cameraBase + '<img src="assets/55be3.png" alt="" draggable="false">';
+    const cameraImage = '<span class="camera-picture">' + cameraBase + '<img src="assets/55be3.png" alt="" draggable="false"></span>';
     const materialImage = visuals?.material ?? (materialBase + '<img src="assets/c9824.png" alt="" draggable="false">');
     const windows = Array.from({ length: cameras }, (_, index) =>
       editable
         ? '<button type="button" class="camera-window" data-camera="' + index + '" aria-label="Форма камеры ' + (index + 1) + '">' + cameraImage + '</button>'
-        : '<span class="camera-window">' + (visuals ? visuals.camera(index) : cameraImage) + '</span>'
+        : '<span class="camera-window' + (index >= (visuals?.compactFrom ?? Infinity) ? ' camera-compact' : '') + '">' + (visuals ? visuals.camera(index) : cameraImage) + '</span>'
     ).join('');
     const kind = !cameras ? 'material' : config.kind;
     return '<div class="composition-art" data-kind="' + kind + '" data-count="' + cameras + '" data-shape="' + config.shape +
-      '" data-corner="' + (config.corner ?? 'tr') + '"' + (kind === 'half' || (kind === 'side' && config.size === 50) ? ' data-even' : '') + ' style="--camera-request:' + (config.size ?? 23) + 'cqw"><div class="composition-panels">' +
+      '" data-corner="' + (config.corner ?? 'tr') + '"' + (kind === 'half' || (kind === 'side' && config.size === 50) ? ' data-even' : '') + ' style="--camera-request:' + (config.size ?? 23) + 'cqw' +
+      (visuals?.slots ? ';--overflow-slots:' + cameras : '') + '"><div class="composition-panels">' +
       (material ? '<div class="material-slot"><div class="material-window">' + materialImage + '</div></div>' : '') +
       (cameras ? '<div class="camera-windows">' + windows +
         (adjustable ? Object.entries(resizeEdges).map(([edge, label]) =>
@@ -255,10 +257,9 @@
     const side = config.kind === 'side';
     const gap = 4 * (count - 1);
     const inset = gap + (side ? 1 : config.kind === 'overlay' ? 8 : 0);
-    const aspect = config.shape === 'rectangle' ? 16 / 9 : 1;
     const available = (bounds.height - inset) / count;
     const laneWidth = config.kind === 'half' ? (bounds.width - 4) / 2 : bounds.width;
-    const maxWidth = Math.min(laneWidth, available * aspect);
+    const maxWidth = Math.min(laneWidth, available * 16 / 9);
     return Math.min(50, Math.floor(maxWidth / bounds.width * 10000) / 100);
   }
 
