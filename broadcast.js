@@ -5,6 +5,9 @@
   const stage = byId('broadcast-stage');
   const share = byId('broadcast-share');
   const slides = byId('broadcast-slides');
+  const settingsButton = byId('broadcast-settings-button');
+  const settingsPanel = byId('broadcast-settings');
+  const settingsLayouts = byId('broadcast-settings-layouts');
   const positionField = byId('broadcast-position-options');
   const positionSelect = controls.elements.position;
   const corners = Array.from(positionSelect.options, option => [option.value, option.text]);
@@ -24,6 +27,58 @@
     { name: 'Тимур Ахметов', sprite: 7 },
   ];
   const templateShapes = ['rectangle', 'rectangle', 'circle', 'rectangle'];
+  let pendingScene;
+
+  function renderSettingsLayouts() {
+    const multiple = Number(controls.elements.count.value) > 1;
+    const choices = multiple
+      ? [['cameras', 'group'], ['both', 'groupSide']]
+      : [['cameras', 'host'], ['both', 'side'], ['material', 'material']];
+    settingsLayouts.innerHTML = choices.map(([scene, id]) => {
+      const { label, markup } = window.webinarLayouts.preview(id);
+      return '<div class="composition-tile"><button type="button" class="layout-card" data-settings-scene="' + scene +
+        '" aria-label="' + label + '" aria-pressed="' + (pendingScene === scene) + '">' + markup + '</button></div>';
+    }).join('');
+  }
+
+  function openSettings() {
+    pendingScene = controls.elements.scene.value;
+    renderSettingsLayouts();
+    settingsPanel.hidden = false;
+    settingsButton.setAttribute('aria-expanded', 'true');
+    settingsLayouts.querySelector('[aria-pressed="true"], .layout-card')?.focus({ preventScroll: true });
+  }
+
+  function closeSettings(restoreFocus = true) {
+    settingsPanel.hidden = true;
+    settingsButton.setAttribute('aria-expanded', 'false');
+    if (restoreFocus) settingsButton.focus({ preventScroll: true });
+  }
+
+  settingsButton.addEventListener('click', () => {
+    if (settingsPanel.hidden) openSettings();
+    else closeSettings();
+  });
+  settingsLayouts.addEventListener('click', event => {
+    const tile = event.target.closest('[data-settings-scene]');
+    if (!tile) return;
+    pendingScene = tile.dataset.settingsScene;
+    for (const button of settingsLayouts.querySelectorAll('[data-settings-scene]')) {
+      button.setAttribute('aria-pressed', String(button === tile));
+    }
+  });
+  byId('broadcast-settings-apply').addEventListener('click', () => {
+    controls.elements.scene.value = pendingScene;
+    closeSettings();
+    render();
+  });
+  byId('broadcast-settings-close').addEventListener('click', () => closeSettings());
+  document.addEventListener('keydown', event => {
+    if (event.key === 'Escape' && !settingsPanel.hidden) {
+      event.preventDefault();
+      closeSettings();
+    }
+  });
 
   function cameraVisual(index) {
     const { name, files, sprite } = presenters[index];
@@ -206,6 +261,7 @@
     controls.hidden = !live;
     byId('card-system-footer').hidden = live;
     if (live) render();
+    else closeSettings(false);
   });
 
   controls.addEventListener('submit', event => event.preventDefault());
@@ -215,6 +271,10 @@
     }
     if (event.target.name === 'template') {
       controls.elements.shape.value = templateShapes[Number(event.target.value)];
+    }
+    if (!settingsPanel.hidden && ['scene', 'count'].includes(event.target.name)) {
+      pendingScene = controls.elements.scene.value;
+      renderSettingsLayouts();
     }
     render();
   });

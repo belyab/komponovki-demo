@@ -355,6 +355,9 @@
   });
 
   window.webinarLayouts = Object.freeze({
+    preview(id) {
+      return { label: scenarios[id].label, markup: art(id, defaults(id)) };
+    },
     draw(id, { template, shape, corner, size, ...visuals }) {
       const config = scenarios[id].material && scenarios[id].cameras
         ? templates[template] : defaults(id);

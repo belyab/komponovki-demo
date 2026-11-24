@@ -37,3 +37,8 @@ byId('close').addEventListener('click', () => {
 byId('preview-window-size').addEventListener('change', event => {
   document.querySelector('.prototype').dataset.windowSize = event.target.value;
 });
+
+document.querySelector('.card-reactions').addEventListener('click', event => {
+  const button = event.target.closest('button[aria-pressed]');
+  if (button) button.setAttribute('aria-pressed', String(button.getAttribute('aria-pressed') !== 'true'));
+});

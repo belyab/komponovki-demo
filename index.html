@@ -48,6 +48,25 @@
               </header>
               <div id="layouts" class="layout-grid"></div>
             </section>
+            <section class="card-reactions" aria-label="Реакции и запрос голоса">
+              <div class="card-reaction-group">
+                <h2>Реакции</h2>
+                <div class="card-reaction-options">
+                  <button type="button" aria-label="Смех" aria-pressed="true">😂</button>
+                  <button type="button" aria-label="Праздник" aria-pressed="true">🎉</button>
+                  <button type="button" aria-label="Нравится" aria-pressed="true">👍</button>
+                  <button type="button" aria-label="Огонь" aria-pressed="true">🔥</button>
+                  <button type="button" aria-label="Восторг" aria-pressed="true">😍</button>
+                  <button type="button" aria-label="Удивление" aria-pressed="false">😮</button>
+                  <button type="button" aria-label="Грусть" aria-pressed="false">😢</button>
+                  <button type="button" aria-label="Не нравится" aria-pressed="false">👎</button>
+                </div>
+              </div>
+              <div class="card-reaction-group card-voice-request">
+                <h2>Запрос голоса</h2>
+                <button type="button" aria-label="Разрешить запрос голоса" aria-pressed="true">👋</button>
+              </div>
+            </section>
           </div>
           <aside class="card-tabs" aria-label="Вкладки карточки">
             <ul>
@@ -128,10 +147,41 @@
           <span class="broadcast-icon" title="Звук">&#xe90e;</span>
           <span class="broadcast-icon" title="Доска рисования">&#xeabd;</span>
           <span class="broadcast-icon" id="broadcast-share" aria-label="Показывать презентацию">&#xe730;</span>
-          <span class="broadcast-icon" title="Настройки">&#xe61b;</span>
+          <button type="button" class="broadcast-icon" id="broadcast-settings-button" title="Настройки" aria-label="Настройки" aria-expanded="false" aria-controls="broadcast-settings">&#xe61b;</button>
           <span class="broadcast-quality" title="Качество трансляции">99%</span>
         </div>
       </aside>
+      <section class="broadcast-settings" id="broadcast-settings" role="dialog" aria-label="Настройки трансляции" hidden>
+        <div class="broadcast-settings-content">
+          <section class="broadcast-settings-layouts" aria-labelledby="broadcast-settings-title">
+            <h2 id="broadcast-settings-title">Компоновки</h2>
+            <div class="composition-grid" id="broadcast-settings-layouts"></div>
+          </section>
+          <div class="broadcast-settings-reactions">
+            <section>
+              <h2>Реакции</h2>
+              <div class="broadcast-settings-emoji" aria-label="Реакции">
+                <span>😂</span><span>🎉</span><span>👍</span><span>🔥</span><span>😍</span><span class="reaction-inactive">😮</span><span class="reaction-inactive">😢</span><span class="reaction-inactive">👎</span>
+              </div>
+            </section>
+            <section class="broadcast-settings-voice">
+              <h2>Запрос голоса</h2>
+              <span class="broadcast-settings-hand">👋</span>
+            </section>
+          </div>
+        </div>
+        <nav class="broadcast-settings-tabs" aria-label="Разделы настроек">
+          <span>Видео и звук</span>
+          <span>Фон камеры</span>
+          <span>Запись</span>
+          <span class="broadcast-settings-tab-active" aria-current="page">Трансляция</span>
+          <span>Параметры</span>
+        </nav>
+        <div class="broadcast-settings-actions">
+          <button type="button" id="broadcast-settings-apply" aria-label="Применить настройки"><span class="kit-icon" aria-hidden="true">&#xe75e;</span></button>
+          <button type="button" id="broadcast-settings-close" aria-label="Закрыть настройки"><img src="assets/broadcast/settings-close.svg" alt="" width="28" height="28"></button>
+        </div>
+      </section>
     </section>
     <aside class="system" aria-label="Настройки прототипа">
       <div class="device"><img src="assets/78a2d.svg" alt=""></div>
