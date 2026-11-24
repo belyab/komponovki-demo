@@ -29,6 +29,10 @@ jobs:
         with:
           enablement: true
 
+      - name: Version styles and scripts
+        run: |
+          sed -i -E 's/(href|src)="(style\.css|broadcast\.css|prototype\.js|layouts\.js|broadcast\.js)"/\1="\2?v='"$GITHUB_SHA"'"/g' index.html
+
       - name: Upload site
         uses: actions/upload-pages-artifact@v3
         with:
