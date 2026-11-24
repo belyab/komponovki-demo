@@ -118,12 +118,12 @@
 .broadcast-stage [data-kind="camera"][data-count="4"]:is([data-shape="square"], [data-shape="circle"]) .camera-windows {
   --camera-cell: calc((min(100cqw, 100cqh) - 4px) / 2);
 }
-.broadcast-stage [data-kind="camera"]:is([data-shape="square"], [data-shape="circle"]) .camera-window .broadcast-name {
+.broadcast-stage :is([data-kind="camera"], [data-even][data-count="1"]):is([data-shape="square"], [data-shape="circle"]) .camera-window .broadcast-name {
   left: 0;
   min-width: min(90px, 100%);
   max-width: 100%;
 }
-.broadcast-stage [data-kind="camera"][data-shape="square"] .camera-window {
+.broadcast-stage :is([data-kind="camera"], [data-even][data-count="1"])[data-shape="square"] .camera-window {
   overflow: hidden;
 }
 .broadcast-speaking { position: absolute; bottom: 3px; left: 14px; width: 9px; height: 3px; border-radius: 2px; background: #24b83f; box-shadow: 11px 0 #24b83f; }
@@ -220,20 +220,66 @@
   height: auto;
   justify-self: center;
 }
+.broadcast-half-grid [data-even] .camera-windows {
+  --rows: round(up, calc(var(--overflow-slots) / var(--camera-grid-columns)), 1);
+  --cell-width: min(var(--camera-size), calc((var(--camera-width) - 4px * (var(--camera-grid-columns) - 1)) / var(--camera-grid-columns)), calc((100cqh - 4px * (var(--rows) - 1)) / var(--rows)));
+  width: 100%;
+  height: 100cqh;
+  grid-template-columns: repeat(var(--camera-grid-columns), var(--cell-width));
+  place-content: center;
+}
+.broadcast-half-grid [data-even] .camera-window {
+  aspect-ratio: 1;
+  max-width: none;
+}
+.broadcast-half-grid [data-even] .camera-window .broadcast-name {
+  left: 0;
+  min-width: min(90px, 100%);
+  max-width: 100%;
+}
+.broadcast-half-grid [data-shape="square"] .camera-window { overflow: hidden; }
 .broadcast-overflow .camera-window { container-type: inline-size; }
-.broadcast-overflow .camera-window:has(.broadcast-overflow-badge) {
-  background: #999;
+.broadcast-overflow .camera-window:has(.broadcast-avatar-group) {
+  background: transparent;
+  box-shadow: none;
   overflow: hidden;
 }
+.broadcast-avatar-group {
+  position: absolute;
+  inset: 0;
+  container-type: size;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+.broadcast-avatar {
+  position: relative;
+  container-type: inline-size;
+  width: min(calc((100% - 8px) / 3), 48px, 100cqh);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  overflow: hidden;
+  flex: none;
+}
+.broadcast-overflow .broadcast-avatar .camera-picture {
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  transform: none;
+  border-radius: 50%;
+  box-shadow: none;
+}
+.broadcast-overflow .broadcast-avatar .broadcast-name { display: none; }
 .broadcast-overflow-badge {
   position: absolute;
   inset: 0;
   display: grid;
   place-items: center;
   color: white;
-  background: linear-gradient(#0006, #0006), url(assets/55be3.png) center / cover;
-  font-size: clamp(12px, 12cqw, 22px);
-  font-weight: 600;
+  background: #0006;
+  font-size: clamp(10px, 32cqw, 16px);
+  font-weight: 400;
 }
 
 

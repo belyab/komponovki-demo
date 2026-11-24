@@ -244,6 +244,14 @@ dialog{border:0;border-radius:14px;padding:20px;box-shadow:0 12px 56px #0003;min
   --demo-width: var(--camera-width);
   --common-height: min(100cqh, calc(var(--demo-width) * 9 / 16));
 }
+[data-even][data-count="1"]:is([data-shape="square"], [data-shape="circle"]) {
+  --common-height: min(100cqh, calc((100cqw - 4px) * 9 / 25));
+  --camera-width: var(--common-height);
+  --demo-width: calc(var(--common-height) * 16 / 9);
+}
+[data-even][data-count="1"]:is([data-shape="square"], [data-shape="circle"]) .camera-window {
+  aspect-ratio: 1;
+}
 .composition-panels { position: absolute; inset: 0; }
 [data-even] .composition-panels {
   display: grid;
@@ -276,6 +284,7 @@ dialog{border:0;border-radius:14px;padding:20px;box-shadow:0 12px 56px #0003;min
   max-width: calc((100cqh - 20px) * 16 / 36);
 }
 [data-kind="overlay"] .camera-windows { margin: var(--camera-inset); }
+:is(#layout-stage, .layout-card) [data-kind="overlay"] .camera-window { overflow: visible; }
 [data-kind="overlay"] .camera-picture { box-shadow: 0 0 6px #0002; }
 [data-kind="overlay"][data-count="4"] .camera-windows { max-width: calc((100cqh - 20px) * 16 / 36); }
 
@@ -371,6 +380,17 @@ dialog{border:0;border-radius:14px;padding:20px;box-shadow:0 12px 56px #0003;min
 }
 .layout-card .composition-art { --camera-size: max(var(--camera-request), calc(144 / 604 * 100cqw)); }
 #layout-stage .composition-art { --camera-size: max(var(--camera-request), min(144px, 50cqw)); }
+:is(#layout-stage, .layout-card) [data-kind="camera"]:is([data-shape="square"], [data-shape="circle"]) .camera-window {
+  aspect-ratio: 1;
+  max-width: min(100%, 100cqh);
+}
+:is(#layout-stage, .layout-card) [data-kind="camera"][data-count="4"]:is([data-shape="square"], [data-shape="circle"]) .camera-windows {
+  --camera-cell: calc((min(100cqw, 100cqh) - 4px) / 2);
+}
+#layout-stage :is([data-shape="square"], [data-shape="circle"]):not([data-kind="camera"]):not([data-even][data-count="1"]) .camera-window {
+  width: 56.25%;
+  aspect-ratio: 1;
+}
 #layout-stage [data-kind="side"]:not([data-even]) {
   --material-offset: calc(var(--camera-width) + 6px);
 }

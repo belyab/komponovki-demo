@@ -35,6 +35,22 @@
       '</span><span class="broadcast-speaking" role="img" aria-label="Говорит"></span></span>';
   }
 
+  function overflowAvatars(first, count) {
+    const remaining = count - first;
+    const visible = Math.min(3, remaining);
+    return '<span class="broadcast-avatar-group">' +
+      Array.from({ length: visible }, (_, offset) => {
+        const index = first + offset;
+        const hidden = offset === visible - 1 ? remaining - visible + 1 : 0;
+        return '<span class="broadcast-avatar" title="' + presenters[index].name + '">' +
+          cameraVisual(index) + (hidden ? overflowBadge(hidden) : '') + '</span>';
+      }).join('') + '</span>';
+  }
+
+  function overflowBadge(count) {
+    return '<span class="broadcast-overflow-badge" aria-label="Ещё ' + count + ' камер">+' + count + '</span>';
+  }
+
   function positionSlides() {
     if (screen.hidden || slides.hidden) return;
     const presentation = stage.querySelector('.material-window').getBoundingClientRect();
@@ -58,17 +74,35 @@
 
   let capacityKey;
   function sceneCapacity(scene, count, row) {
-    if (count !== 12 || scene === 'material') return {};
+    if (count <= 1 || scene === 'material') return {};
     const css = getComputedStyle(stage);
     const height = stage.clientHeight - parseFloat(css.paddingTop) - parseFloat(css.paddingBottom);
     const width = stage.clientWidth - parseFloat(css.paddingLeft) - parseFloat(css.paddingRight);
+    if (stage.classList.contains('broadcast-half-grid')) {
+      const halfWidth = Math.min((width - 4) / 2, height * 16 / 9);
+      const minimum = Math.max(1, Math.min(144, halfWidth, height));
+      const maxColumns = Math.max(1, Math.floor((halfWidth + 4) / (minimum + 4)));
+      const maxRows = Math.max(1, Math.floor((height + 4) / (minimum + 4)));
+      const slots = Math.min(count, maxColumns * maxRows);
+      let columns = 1;
+      let bestDiameter = 0;
+      for (let candidate = 1; candidate <= Math.min(slots, maxColumns); candidate++) {
+        const rows = Math.ceil(slots / candidate);
+        const diameter = Math.min((halfWidth - 4 * (candidate - 1)) / candidate, (height - 4 * (rows - 1)) / rows);
+        if (diameter > bestDiameter) {
+          bestDiameter = diameter;
+          columns = candidate;
+        }
+      }
+      return { slots, columns };
+    }
     if (row) {
       const stripHeight = Math.min(parseFloat(css.getPropertyValue('--camera-strip-request')), height * 0.24);
       const ratio = controls.elements.shape.value === 'rectangle' ? 16 / 9 : 1;
       const gap = 4;
       const cameraWidth = stripHeight * ratio;
       const fullCapacity = Math.floor((width + gap) / (cameraWidth + gap));
-      if (fullCapacity >= count) return { slots: count };
+      if (fullCapacity >= count) return count === 4 ? {} : { slots: count };
       const avatarWidth = Math.min(width * 0.09, stripHeight / 2);
       const avatarGroupWidth = 3 * (avatarWidth + gap) + 8;
       const full = Math.max(1, Math.floor((width + gap - avatarGroupWidth) / (cameraWidth + gap)));
@@ -77,9 +111,11 @@
     if (scene === 'cameras') {
       const columns = Math.max(2, Math.min(4, Math.floor((width + 4) / 128)));
       const rows = Math.max(1, Math.floor((height + 4) / 76));
+      if (count === 4 && columns * rows >= count) return {};
       return { slots: Math.min(count, columns * rows), columns };
     }
-    return { slots: Math.min(count, Math.max(2, Math.floor((height - 8 + 4) / 80))) };
+    const slots = Math.min(count, Math.max(2, Math.floor((height - 8 + 4) / 80)));
+    return count === 4 && slots === count ? {} : { slots };
   }
 
   new ResizeObserver(() => {
@@ -131,6 +167,7 @@
     stage.classList.toggle('broadcast-side-stack', sideStack);
     stage.classList.toggle('broadcast-camera-row', row);
     stage.classList.toggle('broadcast-row-bottom', bottomRow);
+    stage.classList.toggle('broadcast-half-grid', scene === 'both' && half && multiple && shape !== 'rectangle');
     const stripHeight = { small: '72px', standard: '100px', maximum: '124px' };
     stage.style.setProperty('--camera-strip-request', stripHeight[settings.get('cameraSize')]);
     stage.classList.toggle('broadcast-stage-with-slides', !slides.hidden && !overlayBottomRight && !sideStack && !bottomRow);
@@ -148,8 +185,7 @@
       slots,
       compactFrom,
       camera: index => hiddenCount && index === slots - 1
-        ? (row ? cameraVisual(index) : '') +
-          '<span class="broadcast-overflow-badge" aria-label="Ещё ' + hiddenCount + ' камер">+' + hiddenCount + '</span>'
+        ? row ? cameraVisual(index) + overflowBadge(hiddenCount) : overflowAvatars(index, count)
         : cameraVisual(index),
       material: `<span class="broadcast-slide-image" role="img" aria-label="Business Presentation">
         <img src="assets/broadcast/6a54b.png" alt="" draggable="false">

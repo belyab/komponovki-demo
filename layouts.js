@@ -44,9 +44,8 @@
     const cameras = visuals?.slots ?? defaultCount;
     const adjustable = editable && material && (config.kind !== 'half' || cameras > 1);
     const cameraBase = editable ? '<img class="panel-art-base" src="assets/0d8b6.png" alt="" draggable="false">' : '';
-    const materialBase = editable ? '<img class="panel-art-base" src="assets/b082a.png" alt="" draggable="false">' : '';
     const cameraImage = '<span class="camera-picture">' + cameraBase + '<img src="assets/55be3.png" alt="" draggable="false"></span>';
-    const materialImage = visuals?.material ?? (materialBase + '<img src="assets/c9824.png" alt="" draggable="false">');
+    const materialImage = visuals?.material ?? '<img src="assets/c9824.png" alt="" draggable="false">';
     const windows = Array.from({ length: cameras }, (_, index) =>
       editable
         ? '<button type="button" class="camera-window" data-camera="' + index + '" aria-label="Форма камеры ' + (index + 1) + '">' + cameraImage + '</button>'
