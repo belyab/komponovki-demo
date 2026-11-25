@@ -438,6 +438,22 @@
 .broadcast-vertical-cameras [data-kind="overlay"][data-count="4"] .camera-window {
   max-width: calc((100cqh - 12px) * 16 / 36);
 }
+.broadcast-stage:not(.broadcast-camera-row) :is([data-kind="side"], [data-kind="overlay"]):is([data-shape="square"], [data-shape="circle"]):not([data-even]) {
+  --camera-width: calc(var(--camera-size) * 9 / 16);
+}
+.broadcast-vertical-cameras :is([data-kind="side"], [data-kind="overlay"]):is([data-shape="square"], [data-shape="circle"]):not([data-even]) {
+  --stack-count: var(--overflow-slots, 4);
+  --camera-width: min(calc(var(--camera-size) * 9 / 16), calc((100cqh - 4px * (var(--stack-count) - 1)) / var(--stack-count)));
+}
+.broadcast-stage:not(.broadcast-camera-row) :is([data-kind="side"], [data-kind="overlay"]):is([data-shape="square"], [data-shape="circle"]):not([data-even]) .camera-window {
+  aspect-ratio: 1;
+}
+.broadcast-stage:not(.broadcast-camera-row) :is([data-kind="side"], [data-kind="overlay"]):is([data-shape="square"], [data-shape="circle"]):not([data-even]) .camera-window .broadcast-name,
+.broadcast-camera-row :is([data-shape="square"], [data-shape="circle"]) .camera-window .broadcast-name {
+  left: 0;
+  min-width: min(90px, 100%);
+  max-width: 100%;
+}
 
 .broadcast-camera-row {
   --camera-strip-height: min(var(--camera-strip-request, 100px), 24cqh);

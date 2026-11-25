@@ -13,7 +13,7 @@
   const corners = Array.from(positionSelect.options, option => [option.value, option.text]);
   let selectedCorner = positionSelect.value;
   const presenters = [
-    { name: 'Михаил Орлов', files: ['14129.png', 'e466a.png', 'd02ca.png'] },
+    { name: 'Вы', files: ['14129.png', 'e466a.png', 'd02ca.png'] },
     { name: 'Александр Григорьев', files: ['e6bfa.png'] },
     { name: 'Светлана Синицина', files: ['5e82d.png'] },
     { name: 'Ксения Макарова', files: ['6114f.png'] },

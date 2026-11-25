@@ -243,8 +243,8 @@ dialog{border:0;border-radius:14px;padding:20px;box-shadow:0 12px 56px #0003;min
 [data-corner$="r"] .camera-windows { right: 0; }
 [data-corner^="t"] .camera-windows { top: 0; }
 [data-corner^="b"] .camera-windows { bottom: 0; }
-[data-kind="side"][data-corner$="r"] .material-slot { right: var(--material-offset); }
-[data-kind="side"][data-corner$="l"] .material-slot { left: var(--material-offset); }
+[data-kind="side"][data-corner$="r"] .material-slot { right: var(--material-offset); justify-items: end; }
+[data-kind="side"][data-corner$="l"] .material-slot { left: var(--material-offset); justify-items: start; }
 
 [data-even] {
   --camera-width: min(calc((100cqw - 4px) / 2), calc(100cqh * 16 / 9));
@@ -386,7 +386,15 @@ dialog{border:0;border-radius:14px;padding:20px;box-shadow:0 12px 56px #0003;min
   box-shadow: 0 0 4px #0000000f;
 }
 .layout-card .composition-art { --camera-size: max(var(--camera-request), calc(144 / 604 * 100cqw)); }
+.layout-card [data-count="4"]:not([data-kind="camera"]) { --camera-size: max(var(--camera-request), 20cqw); }
+:is(.layout-card, #layout-stage) [data-even][data-count="4"] {
+  --half-width: min(calc((100cqw - 4px) / 2), calc(100cqh * 16 / 9));
+  --stack-width: min(calc(var(--camera-size) * var(--camera-shape-factor, 1)), var(--half-width), calc((100cqh - 12px) * var(--camera-height-ratio, 16 / 9) / 4));
+  --camera-width: var(--stack-width);
+  --demo-width: min(calc(100cqw - var(--camera-width) - 4px), calc(100cqh * 16 / 9));
+}
 #layout-stage .composition-art { --camera-size: max(var(--camera-request), min(144px, 50cqw)); }
+#layout-stage [data-count="4"]:not([data-kind="camera"]) { --camera-size: max(var(--camera-request), min(144px, 20cqw)); }
 :is(#layout-stage, .layout-card) [data-kind="camera"]:is([data-shape="square"], [data-shape="circle"]) .camera-window {
   aspect-ratio: 1;
   max-width: min(100%, 100cqh);
@@ -394,21 +402,34 @@ dialog{border:0;border-radius:14px;padding:20px;box-shadow:0 12px 56px #0003;min
 :is(#layout-stage, .layout-card) [data-kind="camera"][data-count="4"]:is([data-shape="square"], [data-shape="circle"]) .camera-windows {
   --camera-cell: calc((min(100cqw, 100cqh) - 4px) / 2);
 }
-#layout-stage :is([data-shape="square"], [data-shape="circle"]):not([data-kind="camera"]):not([data-even][data-count="1"]) .camera-window {
-  width: 56.25%;
+:is(.layout-card, #layout-stage) :is([data-shape="square"], [data-shape="circle"]):not([data-kind="camera"]):not([data-even][data-count="1"]) {
+  --camera-shape-factor: 9 / 16;
+  --camera-height-ratio: 1;
+}
+:is(.layout-card, #layout-stage) :is([data-kind="side"], [data-kind="overlay"]):is([data-shape="square"], [data-shape="circle"]):not([data-even]) {
+  --camera-width: calc(var(--camera-size) * var(--camera-shape-factor));
+}
+:is(.layout-card, #layout-stage) :is([data-shape="square"], [data-shape="circle"]):not([data-kind="camera"]):not([data-even][data-count="1"]) .camera-window {
   aspect-ratio: 1;
 }
 #layout-stage [data-kind="side"]:not([data-even]) {
-  --material-offset: calc(var(--camera-width) + 6px);
+  --material-offset: calc(var(--camera-width) + 5px);
 }
 #layout-stage [data-kind="side"]:not([data-even])[data-corner$="r"] .camera-windows { right: 1px; }
 #layout-stage [data-kind="side"]:not([data-even])[data-corner$="l"] .camera-windows { left: 1px; }
 #layout-stage [data-kind="side"]:not([data-even])[data-corner^="t"] .camera-windows { top: 1px; }
 #layout-stage [data-kind="side"]:not([data-even])[data-corner^="b"] .camera-windows { bottom: 1px; }
 #layout-stage [data-kind="side"]:not([data-even])[data-count="4"] {
-  --camera-width: min(var(--camera-size), calc((100cqh - 13px) * 16 / 36));
+  --camera-width: min(calc(var(--camera-size) * var(--camera-shape-factor, 1)), calc((100cqh - 13px) * var(--camera-height-ratio, 16 / 9) / 4));
 }
 #layout-stage [data-kind="side"]:not([data-even])[data-count="4"] .camera-window { max-width: none; }
+:is(.layout-card, #layout-stage) [data-kind="overlay"][data-count="4"]:is([data-shape="square"], [data-shape="circle"]) .camera-windows {
+  max-width: calc((100cqh - 20px) / 4);
+}
+.layout-card [data-kind="side"][data-count="4"]:not([data-even]) {
+  --camera-width: min(calc(var(--camera-size) * var(--camera-shape-factor, 1)), calc((100cqh - 12px) * var(--camera-height-ratio, 16 / 9) / 4));
+}
+.layout-card [data-kind="side"][data-count="4"] .camera-window { max-width: none; }
 #layout-stage [data-dragging] .camera-windows {
   position: absolute;
   inset: var(--drag-top) auto auto var(--drag-left);

@@ -32,8 +32,13 @@
   let cameraIndex = 0;
   let skipClick = false;
 
+  function templateFor(id, index) {
+    const template = templates[index];
+    return id === 'groupSide' && index === 0 ? { ...template, size: 20 } : template;
+  }
+
   function defaults(id) {
-    return scenarios[id].material ? { ...templates[0], template: 0 } : { kind: 'camera', shape: 'rectangle' };
+    return scenarios[id].material ? { ...templateFor(id, 0), template: 0 } : { kind: 'camera', shape: 'rectangle' };
   }
 
   const saved = Object.fromEntries(Object.keys(scenarios).map(id => [id, defaults(id)]));
@@ -127,7 +132,7 @@
     if (menu === 'templates') {
       options.innerHTML = '<div class="template-heading"><h3>Шаблон</h3><button type="button" data-command="dismiss" aria-label="Закрыть шаблоны"><img src="assets/a9caf.svg" alt=""></button></div><div class="composition-grid">' + templates.map((template, index) =>
         '<button type="button" class="layout-card" data-template="' + index + '" aria-label="' + template.label +
-        '" aria-pressed="' + (config.template === index) + '">' + art(editingId, template) + '</button>'
+        '" aria-pressed="' + (config.template === index) + '">' + art(editingId, templateFor(editingId, index)) + '</button>'
       ).join('') + '</div>';
     } else if (menu === 'shape') {
       const camera = stage.querySelector('[data-camera="' + cameraIndex + '"]');
@@ -158,7 +163,7 @@
     const previous = savedTemplates.get(editingId)?.get(index);
     const { cameraOverrides } = history[step];
     update(draft ?? previous ?? {
-      ...templates[index],
+      ...templateFor(editingId, index),
       template: index,
       ...(cameraOverrides && { ...cameraOverrides, cameraOverrides }),
     });
@@ -264,7 +269,10 @@
 
   function resizeCamera(config, bounds, delta) {
     const maximum = maxCameraSize(config, bounds);
-    const minimum = Math.min(maximum, 144 / bounds.width * 100);
+    const minimumRequest = editingId === 'groupSide'
+      ? Math.min(144 / bounds.width * 100, templateFor(editingId, 0).size)
+      : 144 / bounds.width * 100;
+    const minimum = Math.min(maximum, minimumRequest);
     const initial = Math.max(minimum, Math.min(maximum, config.size));
     const size = Math.max(minimum, Math.min(maximum, initial + delta));
     return { size, next: size === initial ? config : customizeCamera(config, 'size', size) };
@@ -314,7 +322,8 @@
       const horizontal = edge === 'left' || edge === 'right';
       const movement = horizontal ? dx : dy * cameraBox.width / cameraBox.height;
       const direction = edge === 'left' || edge === 'top' ? -1 : 1;
-      const delta = Math.round(direction * movement / bounds.width * 100);
+      const shapeFactor = config.shape === 'rectangle' ? 1 : 9 / 16;
+      const delta = Math.round(direction * movement / bounds.width * 100 / shapeFactor);
       const { size, next } = resizeCamera(config, bounds, delta);
       gesture.next = next;
       art.style.setProperty('--camera-request', size + 'cqw');
@@ -360,7 +369,7 @@
     },
     draw(id, { template, shape, corner, size, ...visuals }) {
       const config = scenarios[id].material && scenarios[id].cameras
-        ? templates[template] : defaults(id);
+        ? templateFor(id, template) : defaults(id);
       return art(id, { ...config, shape, corner: corner ?? config.corner, size: size ?? config.size }, false, visuals);
     },
   });
