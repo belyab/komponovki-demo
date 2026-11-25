@@ -49,7 +49,14 @@
 #broadcast-end { padding: 0 16px; font-size: 16px; color: #000; }
 
 .broadcast-stage { min-height: 0; padding: 6px 16px; }
-.broadcast-stage-with-slides { padding-bottom: 37px; }
+.broadcast-stage-with-slides .composition-art:not([data-even]) .material-slot { bottom: 31px; }
+.broadcast-stage-with-slides [data-even][data-count="1"] {
+  --camera-width: min(calc((100cqw - 4px) / 2), calc((100cqh - 31px) * 16 / 9));
+}
+.broadcast-stage-with-slides [data-even][data-count="1"]:is([data-shape="square"], [data-shape="circle"]) {
+  --common-height: min(calc(100cqh - 31px), calc((100cqw - 4px) * 9 / 25));
+  --camera-width: var(--common-height);
+}
 .broadcast-overlay-bottom-right .camera-windows { margin: 0; }
 .prototype[data-window-size="wide"] .broadcast-overlay-bottom-right .material-slot {
   bottom: 31px;
@@ -213,8 +220,6 @@
 .broadcast-settings-emoji span, .broadcast-settings-hand {
   display: grid;
   place-items: center;
-  font-size: 30px;
-  line-height: 34px;
   padding: 2px;
 }
 .broadcast-settings .reaction-inactive { opacity: 0.3; }
@@ -275,7 +280,7 @@
 .broadcast-mic.broadcast-active::after { content: ""; position: absolute; bottom: 3px; left: 15px; width: 14px; height: 4px; background: url(assets/broadcast/6b3cf.svg) center / auto no-repeat; transform: rotate(90deg); }
 .broadcast-quality { display: grid; place-items: center; width: 32px; height: 32px; margin: 6px; border: 2px solid #24b83f; border-radius: 50%; color: #8991a9; font-size: 10px; }
 
-.broadcast-slides { z-index: 2; position: absolute; bottom: 4px; right: 16px; display: flex; align-items: center; gap: 5px; height: 27px; border-radius: 30px; background: #f8f8f8; }
+.broadcast-slides { z-index: 2; position: absolute; bottom: 6px; right: 16px; display: flex; align-items: center; gap: 5px; height: 27px; border-radius: 30px; background: #f8f8f8; }
 .broadcast-slide-arrow { display: grid; place-items: center; align-self: stretch; flex: 0 0 min(30px, 16%); border-radius: 30px; background: #eee; color: #8991a9; }
 .broadcast-slide-arrow:last-child { flex-basis: min(55px, 23%); background: #ef7338; color: #fff; }
 .broadcast-slide-arrow::before { content: ""; border-block: 6px solid transparent; border-right: 7px solid currentColor; }
@@ -364,6 +369,22 @@
   max-width: 100%;
 }
 .broadcast-half-grid [data-shape="square"] .camera-window { overflow: hidden; }
+.broadcast-stage [data-kind="half"]:not([data-count="1"]) {
+  --half-width: min(calc((100cqw - 4px) / 2), calc(100cqh * 16 / 9));
+  --stack-count: var(--overflow-slots, 4);
+  --stack-width: min(var(--camera-size), var(--half-width), calc((100cqh - 4px * (var(--stack-count) - 1)) * 16 / (9 * var(--stack-count))));
+  --camera-width: var(--stack-width);
+  --demo-width: min(calc(100cqw - var(--camera-width) - 4px), calc((100cqh - 31px) * 16 / 9));
+  --common-height: min(100cqh, calc(var(--demo-width) * 9 / 16));
+}
+.broadcast-half-grid [data-kind="half"]:not([data-count="1"]) {
+  --rows: round(up, calc(var(--overflow-slots) / var(--camera-grid-columns)), 1);
+  --cell-width: min(var(--camera-size), calc((var(--half-width) - 4px * (var(--camera-grid-columns) - 1)) / var(--camera-grid-columns)), calc((100cqh - 4px * (var(--rows) - 1)) / var(--rows)));
+  --camera-width: calc(var(--camera-grid-columns) * var(--cell-width) + 4px * (var(--camera-grid-columns) - 1));
+}
+.broadcast-half-grid [data-kind="half"]:not([data-count="1"]) .camera-windows {
+  --cell-width: inherit;
+}
 .broadcast-overflow .camera-window { container-type: inline-size; }
 .broadcast-overflow .camera-window:has(.broadcast-avatar-group) {
   background: transparent;
@@ -410,7 +431,13 @@
 
 
 .broadcast-side-stack .material-slot { bottom: 31px; }
-.broadcast-side-stack .composition-art { --stack-limit: calc((100cqh - 4px * (var(--overflow-slots) - 1)) * 16 / (9 * var(--overflow-slots))); }
+.broadcast-vertical-cameras .composition-art { --stack-limit: calc((100cqh - 4px * (var(--overflow-slots) - 1)) * 16 / (9 * var(--overflow-slots))); }
+.broadcast-vertical-cameras [data-kind="overlay"] .material-slot { bottom: 31px; }
+.broadcast-vertical-cameras [data-kind="overlay"] .camera-windows { margin: 0; }
+.broadcast-vertical-cameras [data-kind="overlay"][data-count="4"] .camera-windows,
+.broadcast-vertical-cameras [data-kind="overlay"][data-count="4"] .camera-window {
+  max-width: calc((100cqh - 12px) * 16 / 36);
+}
 
 .broadcast-camera-row {
   --camera-strip-height: min(var(--camera-strip-request, 100px), 24cqh);

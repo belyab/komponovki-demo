@@ -115,8 +115,11 @@
     const topRow = stage.classList.contains('broadcast-camera-row') && !bottomRow;
     slides.style.bottom = row ? area.bottom - row.top + 6 + 'px'
       : topRow ? area.bottom - presentation.bottom - slides.offsetHeight - 4 + 'px' : '';
-    if (stage.classList.contains('broadcast-overlay-bottom-right')) {
-      const camera = stage.querySelector('.camera-windows').getBoundingClientRect();
+    const overlay = stage.querySelector('[data-kind="overlay"] .camera-windows');
+    const camera = overlay?.getBoundingClientRect();
+    const overlayOnRight = camera && overlay.closest('.composition-art').dataset.corner.endsWith('r');
+    const cameraAtBottom = camera && camera.bottom > area.bottom - slides.offsetHeight - 6;
+    if (overlayOnRight && cameraAtBottom) {
       slides.style.left = presentation.left - area.left + 'px';
       slides.style.right = 'auto';
       slides.style.width = Math.max(0, Math.min(358, camera.left - presentation.left - 8)) + 'px';
@@ -225,7 +228,9 @@
     stage.classList.toggle('broadcast-half-grid', scene === 'both' && half && multiple && shape !== 'rectangle');
     const stripHeight = { small: '72px', standard: '100px', maximum: '124px' };
     stage.style.setProperty('--camera-strip-request', stripHeight[settings.get('cameraSize')]);
-    stage.classList.toggle('broadcast-stage-with-slides', !slides.hidden && !overlayBottomRight && !sideStack && !bottomRow);
+    const verticalCameras = scene === 'both' && multiple && !row;
+    stage.classList.toggle('broadcast-vertical-cameras', verticalCameras);
+    stage.classList.toggle('broadcast-stage-with-slides', !slides.hidden && !overlayBottomRight && !verticalCameras && !bottomRow);
     const capacity = sceneCapacity(scene, count, row);
     capacityKey = JSON.stringify(capacity);
     const { slots, columns, compactFrom } = capacity;
