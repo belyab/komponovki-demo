@@ -31,6 +31,10 @@
   let gesture;
   let cameraIndex = 0;
   let skipClick = false;
+  let embedded = null;
+  const embeddedSavedTemplates = new Map();
+  const activeCameraCount = () => embedded?.slots ?? scenarios[editingId].cameras;
+  const activeTemplateStore = () => embedded ? embeddedSavedTemplates : savedTemplates;
 
   function templateFor(id, index) {
     const template = templates[index];
@@ -54,11 +58,11 @@
     const windows = Array.from({ length: cameras }, (_, index) =>
       editable
         ? '<button type="button" class="camera-window" data-camera="' + index + '" aria-label="Форма камеры ' + (index + 1) + '">' + cameraImage + '</button>'
-        : '<span class="camera-window' + (index >= (visuals?.compactFrom ?? Infinity) ? ' camera-compact' : '') + '">' + (visuals ? visuals.camera(index) : cameraImage) + '</span>'
+        : '<span class="camera-window' + (visuals?.screenShare && index === 0 ? ' screen-share-window' : '') + (index >= (visuals?.compactFrom ?? Infinity) ? ' camera-compact' : '') + '">' + (visuals ? visuals.camera(index) : cameraImage) + '</span>'
     ).join('');
     const kind = !cameras ? 'material' : config.kind;
     return '<div class="composition-art" data-kind="' + kind + '" data-count="' + cameras + '" data-shape="' + config.shape +
-      '" data-corner="' + (config.corner ?? 'tr') + '"' + (kind === 'half' || (kind === 'side' && config.size === 50) ? ' data-even' : '') + ' style="--camera-request:' + (config.size ?? 23) + 'cqw' +
+      '" data-corner="' + (config.corner ?? 'tr') + '"' + (['top', 'bottom'].includes(config.corner) ? ' data-row="' + config.corner + '"' : '') + (kind === 'half' || (kind === 'side' && config.size === 50) ? ' data-even' : '') + ' style="--camera-request:' + (config.size ?? 23) + 'cqw' +
       (visuals?.slots ? ';--overflow-slots:' + cameras : '') + '"><div class="composition-panels">' +
       (material ? '<div class="material-slot"><div class="material-window">' + materialImage + '</div></div>' : '') +
       (cameras ? '<div class="camera-windows">' + windows +
@@ -94,12 +98,14 @@
   }
 
   function positionEditor() {
+    if (embedded) return;
     const { left, top, width, height } = mockup.getBoundingClientRect();
     editor.style.setProperty('--editor-x', left + width / 2 + 'px');
     editor.style.setProperty('--editor-y', top + height / 2 + 'px');
     editor.style.setProperty('--editor-width', Math.max(0, width - 20) + 'px');
     editor.style.setProperty('--editor-height', Math.max(0, height - 20) + 'px');
     if (editor.open && menu === 'shape') positionShapeMenu(stage.querySelector('.camera-selected'));
+    if (editor.open && menu === 'templates') positionTemplateMenu();
   }
 
   new ResizeObserver(positionEditor).observe(mockup);
@@ -116,15 +122,21 @@
 
   function renderEditor() {
     const config = history[step];
-    const canUseTemplates = scenarios[editingId].material;
-    editor.querySelector('[data-command=templates]').disabled = !canUseTemplates;
-    for (const command of ['previous', 'next']) {
-      editor.querySelector('[data-command=' + command + ']').hidden = !canUseTemplates;
-    }
+    const canUseTemplates = scenarios[editingId].material && (!embedded || activeCameraCount() > 0);
+    const templatesButton = editor.querySelector('[data-command=templates]');
+    templatesButton.disabled = !canUseTemplates;
+    templatesButton.textContent = canUseTemplates ? 'Шаблон' : 'Компоновка';
+    editor.querySelector('.editor-template-arrows').hidden = !canUseTemplates;
     editor.querySelector('[data-command=undo]').disabled = step === 0;
     editor.querySelector('[data-command=redo]').disabled = step === history.length - 1;
-    editor.querySelector('[data-command=reset]').disabled = JSON.stringify(config) === JSON.stringify(defaults(editingId));
-    stage.innerHTML = art(editingId, config, true);
+    editor.querySelector('[data-command=reset]').disabled = !activeCameraCount() || JSON.stringify(config) === JSON.stringify(defaults(editingId));
+    stage.innerHTML = art(editingId, config, true, embedded ? { slots: activeCameraCount() } : undefined);
+    if (embedded) {
+      const artNode = stage.firstElementChild;
+      const count = Math.max(1, activeCameraCount());
+      artNode.style.setProperty('--embedded-count', count);
+      artNode.style.setProperty('--embedded-columns', Math.min(count, embedded.columns));
+    }
     options.hidden = !menu;
     options.removeAttribute('style');
     options.dataset.menu = menu;
@@ -134,6 +146,7 @@
         '<button type="button" class="layout-card" data-template="' + index + '" aria-label="' + template.label +
         '" aria-pressed="' + (config.template === index) + '">' + art(editingId, templateFor(editingId, index)) + '</button>'
       ).join('') + '</div>';
+      positionTemplateMenu();
     } else if (menu === 'shape') {
       const camera = stage.querySelector('[data-camera="' + cameraIndex + '"]');
       camera.classList.add('camera-selected');
@@ -148,6 +161,26 @@
     }
   }
 
+  function positionTemplateMenu() {
+    const dialogBox = editor.getBoundingClientRect();
+    const buttonBox = editor.querySelector('[data-command=templates]').getBoundingClientRect();
+    const menuBox = options.getBoundingClientRect();
+    const headingBox = options.querySelector('.template-heading h3').getBoundingClientRect();
+    const bounds = (embedded ? editor.closest('.broadcast-settings') : mockup).getBoundingClientRect();
+    const width = options.offsetWidth;
+    // Align the menu heading with the trigger text, not the menu's center.
+    const minLeft = Math.max(bounds.left, 0) + 6;
+    const maxLeft = Math.min(bounds.right, window.innerWidth) - width - 6;
+    const desiredLeft = buttonBox.left - (headingBox.left - menuBox.left);
+    const left = maxLeft >= minLeft
+      ? Math.max(minLeft, Math.min(desiredLeft, maxLeft))
+      : Math.max(bounds.left, Math.min(desiredLeft, bounds.right - width));
+    options.style.left = left - dialogBox.left + 'px';
+    const buttonTextCenterY = buttonBox.top + buttonBox.height / 2 + 1;
+    const headingCenterOffset = headingBox.top - menuBox.top + headingBox.height / 2;
+    options.style.top = buttonTextCenterY - headingCenterOffset - dialogBox.top + 'px';
+  }
+
   function positionShapeMenu(camera) {
     const dialogBox = editor.getBoundingClientRect();
     const box = camera.getBoundingClientRect();
@@ -160,13 +193,16 @@
   function chooseTemplate(index) {
     menu = '';
     const draft = history.slice(0, step + 1).findLast(config => config.template === index);
-    const previous = savedTemplates.get(editingId)?.get(index);
+    const previous = activeTemplateStore().get(editingId)?.get(index);
     const { cameraOverrides } = history[step];
-    update(draft ?? previous ?? {
+    const next = draft ?? previous ?? {
       ...templateFor(editingId, index),
       template: index,
       ...(cameraOverrides && { ...cameraOverrides, cameraOverrides }),
-    });
+    };
+    const normalized = embedded && index === 3 && ['top', 'bottom'].includes(next.corner) ? { ...next, corner: 'tr' } : next;
+    if (JSON.stringify(history[step]) === JSON.stringify(normalized)) renderEditor();
+    else update(normalized);
   }
 
   function customizeCamera(config, property, value) {
@@ -256,8 +292,9 @@
   });
 
   function maxCameraSize(config, bounds) {
-    const count = scenarios[editingId].cameras;
+    const count = activeCameraCount();
     if (count === 1) return 50;
+    if (embedded && ['top', 'bottom'].includes(config.corner)) return Math.min(50, 100 / count);
     const side = config.kind === 'side';
     const gap = 4 * (count - 1);
     const inset = gap + (side ? 1 : config.kind === 'overlay' ? 8 : 0);
@@ -269,7 +306,7 @@
 
   function resizeCamera(config, bounds, delta) {
     const maximum = maxCameraSize(config, bounds);
-    const minimumRequest = editingId === 'groupSide'
+    const minimumRequest = embedded ? 144 / Math.max(1, embedded.sceneWidth) * 100 : editingId === 'groupSide'
       ? Math.min(144 / bounds.width * 100, templateFor(editingId, 0).size)
       : 144 / bounds.width * 100;
     const minimum = Math.min(maximum, minimumRequest);
@@ -333,8 +370,10 @@
 
     const left = Math.max(0, Math.min(bounds.width - cameraBox.width, cameraBox.left - bounds.left + dx));
     const top = Math.max(0, Math.min(bounds.height - cameraBox.height, cameraBox.top - bounds.top + dy));
-    const corner = (top + cameraBox.height / 2 < bounds.height / 2 ? 't' : 'b') +
-      (left + cameraBox.width / 2 < bounds.width / 2 ? 'l' : 'r');
+    const horizontalCenter = embedded && ['top', 'bottom'].includes(config.corner) ? event.clientX - bounds.left : left + cameraBox.width / 2;
+    const upper = top + cameraBox.height / 2 < bounds.height / 2;
+    const corner = embedded && activeCameraCount() > 1 && config.kind !== 'half' && horizontalCenter > bounds.width * .3 && horizontalCenter < bounds.width * .7
+      ? (upper ? 'top' : 'bottom') : (upper ? 't' : 'b') + (horizontalCenter < bounds.width / 2 ? 'l' : 'r');
     gesture.next = customizeCamera(config, 'corner', corner);
     art.dataset.corner = corner;
     art.style.setProperty('--drag-left', left + 'px');
@@ -364,6 +403,36 @@
   });
 
   window.webinarLayouts = Object.freeze({
+    beginEmbedded(container, id, config, details) {
+      embedded = details;
+      editingId = id;
+      history = [{ ...config }];
+      step = 0;
+      menu = '';
+      gesture = null;
+      cameraIndex = 0;
+      editor.classList.add('embedded-layout-editor');
+      container.append(editor);
+      editor.setAttribute('open', '');
+      renderEditor();
+    },
+    embeddedConfig() { return embedded ? { ...history[step] } : null; },
+    endEmbedded(commit = false) {
+      if (!embedded) return;
+      if (commit && scenarios[editingId].material) {
+        const configs = embeddedSavedTemplates.get(editingId) ?? new Map();
+        for (const draft of history.slice(0, step + 1)) configs.set(draft.template, draft);
+        embeddedSavedTemplates.set(editingId, configs);
+      }
+      editor.removeAttribute('open');
+      editor.classList.remove('embedded-layout-editor');
+      options.hidden = true;
+      mockup.append(editor);
+      embedded = null;
+      menu = '';
+      gesture = null;
+    },
+    dismissEmbeddedMenu() { if (embedded && menu) { dismissMenu(); return true; } return false; },
     preview(id) {
       return { label: scenarios[id].label, markup: art(id, defaults(id)) };
     },

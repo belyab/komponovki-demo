@@ -58,7 +58,7 @@
   --camera-width: var(--common-height);
 }
 .broadcast-overlay-bottom-right .camera-windows { margin: 0; }
-.prototype[data-window-size="wide"] .broadcast-overlay-bottom-right .material-slot {
+.prototype:is([data-window-size="wide"], [data-window-size="narrow"]) .broadcast-overlay-bottom-right .material-slot {
   bottom: 31px;
 }
 .broadcast-stage [data-kind="side"][data-count="4"] { --camera-width: min(var(--camera-size), calc((100cqh - 12px) * 16 / 36)); }
@@ -83,6 +83,40 @@
 .broadcast-stage :is(.camera-window, .broadcast-slide-image) img { position: absolute; inset: 0; }
 .broadcast-slide-image { position: absolute; inset: 0; }
 .broadcast-stage .broadcast-slide-image img { object-fit: contain; }
+
+.broadcast-stage .broadcast-screen-picture {
+  display: grid;
+  place-items: center;
+  container-type: inline-size;
+  background: #dce4eb;
+}
+.screen-share-desktop {
+  display: grid;
+  grid-template-rows: 12% 1fr;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  background: #fff;
+  color: #223245;
+  overflow: hidden;
+}
+.screen-share-browser { display: flex; align-items: center; gap: 2%; padding: 0 4%; background: #e8ecf1; }
+.screen-share-browser i { width: 2.5%; aspect-ratio: 1; border-radius: 50%; background: #a6b4c4; }
+.screen-share-browser i:first-child { background: #e18079; }
+.screen-share-browser > span { flex: 1; height: 45%; margin-left: 3%; background: #fff; border-radius: 6px; }
+.screen-share-page { display: grid; grid-template-columns: 23% 1fr; min-height: 0; }
+.screen-share-sidebar { display: flex; flex-direction: column; gap: 8%; background: #f1f4f7; padding: 17% 13%; }
+.screen-share-sidebar i { height: 6%; border-radius: 2px; background: #c0cbd7; }
+.screen-share-sidebar i:first-child { background: #6e9bc8; }
+.screen-share-document { display: flex; flex-direction: column; gap: 7%; padding: 6% 9%; min-height: 0; overflow: hidden; }
+.screen-share-document strong { font-size: clamp(5px, 5cqw, 18px); line-height: 1; font-weight: 600; white-space: nowrap; }
+.screen-share-document > span:not(.screen-share-chart) { height: 4%; width: 90%; border-radius: 2px; background: #d5dee7; }
+.screen-share-document > span:nth-child(3) { width: 68%; }
+.screen-share-chart { display: flex; gap: 6%; align-items: end; height: 45%; padding: 4% 5% 0; background: #f4f7fa; }
+.screen-share-chart i { width: 14%; background: #789fc9; height: 45%; }
+.screen-share-chart i:nth-child(2) { height: 70%; }
+.screen-share-chart i:nth-child(3) { height: 56%; }
+.screen-share-chart i:nth-child(4) { height: 88%; }
+.screen-share-chart i:nth-child(5) { height: 75%; }
 
 .broadcast-name {
   position: absolute;
@@ -180,6 +214,78 @@
   overflow: auto;
   padding-bottom: 16px;
 }
+#broadcast-settings-preview .preview-panel { margin: 0; padding: 0; border-radius: 0; }
+#broadcast-settings-preview .stage { min-height: 303px; }
+#broadcast-settings-preview .video-preview { height: 236px; }
+#broadcast-settings-preview .preview-controls { gap: 12px; }
+#broadcast-settings-preview .preview-controls strong { margin-right: 42px; }
+#broadcast-settings-layouts { min-width: 0; }
+#layout-editor.embedded-layout-editor {
+  display: block;
+  position: relative;
+  inset: auto;
+  transform: none;
+  width: 100%;
+  max-width: none;
+  max-height: none;
+  padding: 0 10px 8px;
+  box-shadow: 0 0 8px #0000000f;
+  overflow: visible;
+}
+#layout-editor.embedded-layout-editor :is([data-command="apply"], [data-command="close"]) { display: none; }
+#layout-editor.embedded-layout-editor #layout-stage .composition-art {
+  --camera-size: var(--camera-request);
+  --embedded-ratio: 16 / 9;
+  --embedded-gap: calc(4px * (var(--embedded-count) - 1));
+  --embedded-stack: min(calc(var(--camera-size) * var(--camera-shape-factor, 1)), calc((100cqh - var(--embedded-gap) - 8px) * var(--embedded-ratio) / var(--embedded-count)));
+}
+#layout-editor.embedded-layout-editor #layout-stage :is([data-shape="square"], [data-shape="circle"]) { --embedded-ratio: 1; }
+#layout-editor.embedded-layout-editor #layout-stage [data-kind="camera"]:not([data-count="1"]) .camera-windows {
+  --embedded-rows: round(up, calc(var(--embedded-count) / var(--embedded-columns)), 1);
+  --embedded-cell: min(calc((100cqw - 4px * (var(--embedded-columns) - 1)) / var(--embedded-columns)), calc((100cqh - 4px * (var(--embedded-rows) - 1)) * var(--embedded-ratio) / var(--embedded-rows)));
+  grid-template-columns: repeat(var(--embedded-columns), var(--embedded-cell));
+}
+#layout-editor.embedded-layout-editor #layout-stage [data-kind="camera"]:not([data-count="1"]) .camera-window { max-width: none; }
+#layout-editor.embedded-layout-editor #layout-stage :is([data-kind="side"], [data-kind="overlay"]):not([data-even]):not([data-row]):not([data-count="1"]) { --camera-width: var(--embedded-stack); }
+#layout-editor.embedded-layout-editor #layout-stage :is([data-kind="side"], [data-kind="overlay"]):not([data-even]):not([data-row]) .camera-window { max-width: none; }
+#layout-editor.embedded-layout-editor #layout-stage [data-kind="overlay"]:not([data-row]) .camera-windows { max-width: none; }
+#layout-editor.embedded-layout-editor #layout-stage [data-even]:not([data-count="1"]) {
+  --half-width: calc((100cqw - 4px) / 2);
+  --stack-width: min(var(--embedded-stack), var(--half-width));
+  --camera-width: var(--stack-width);
+  --demo-width: min(calc(100cqw - var(--camera-width) - 4px), calc(100cqh * 16 / 9));
+}
+#layout-editor.embedded-layout-editor #layout-stage [data-even]:not([data-count="1"]) .camera-windows { width: var(--stack-width); height: auto; justify-self: center; }
+#layout-editor.embedded-layout-editor #layout-stage [data-even]:not([data-count="1"]) .camera-window { max-width: none; }
+#layout-editor.embedded-layout-editor #layout-stage [data-even]:not([data-count="1"]):is([data-shape="square"], [data-shape="circle"]) {
+  --embedded-rows: round(up, calc(var(--embedded-count) / var(--embedded-columns)), 1);
+  --embedded-half-cell: min(var(--camera-size), calc((var(--half-width) - 4px * (var(--embedded-columns) - 1)) / var(--embedded-columns)), calc((100cqh - 4px * (var(--embedded-rows) - 1)) / var(--embedded-rows)));
+  --camera-width: calc(var(--embedded-columns) * var(--embedded-half-cell) + 4px * (var(--embedded-columns) - 1));
+}
+#layout-editor.embedded-layout-editor #layout-stage [data-even]:not([data-count="1"]):is([data-shape="square"], [data-shape="circle"]) .camera-windows {
+  width: var(--camera-width);
+  grid-template-columns: repeat(var(--embedded-columns), var(--embedded-half-cell));
+  place-content: center;
+}
+#layout-editor.embedded-layout-editor #layout-stage [data-row] {
+  --row-width: min(calc((100cqw - var(--embedded-gap)) / var(--embedded-count)), calc(100cqh * .24 * var(--embedded-ratio)), calc(var(--camera-size) * var(--camera-shape-factor, 1)));
+  --row-height: calc(var(--row-width) / var(--embedded-ratio));
+}
+#layout-editor.embedded-layout-editor #layout-stage [data-row] .composition-panels { display: block; }
+#layout-editor.embedded-layout-editor #layout-stage [data-row] .material-slot { inset: calc(var(--row-height) + 4px) 0 0; width: auto; height: auto; justify-items: center; }
+#layout-editor.embedded-layout-editor #layout-stage [data-row="bottom"] .material-slot { inset: 0 0 calc(var(--row-height) + 4px); }
+#layout-editor.embedded-layout-editor #layout-stage [data-row] .camera-windows { position: absolute; inset: 0 0 auto; display: flex; justify-content: center; gap: 4px; width: 100%; max-width: none; height: var(--row-height); margin: 0; }
+#layout-editor.embedded-layout-editor #layout-stage [data-row="bottom"] .camera-windows { inset: auto 0 0; }
+#layout-editor.embedded-layout-editor #layout-stage [data-row] .camera-window { width: var(--row-width); max-width: none; aspect-ratio: var(--embedded-ratio); }
+#layout-editor.embedded-layout-editor #layout-stage [data-row] .camera-windows { align-items: center; }
+#layout-editor.embedded-layout-editor #layout-stage [data-row] .camera-compact { width: min(calc(var(--row-height) / 2), var(--row-width)); aspect-ratio: 1; border-radius: 50%; }
+#layout-editor.embedded-layout-editor #layout-stage [data-row] .camera-compact .camera-picture { border-radius: 50%; }
+#layout-editor.embedded-layout-editor #layout-stage [data-dragging] .camera-windows { inset: var(--drag-top) auto auto var(--drag-left); }
+#layout-editor.embedded-layout-editor #layout-stage .camera-resize { width: 12px; height: 12px; }
+#layout-editor.embedded-layout-editor #layout-stage [data-resize="top"] { transform: translate(-50%, -50%); }
+#layout-editor.embedded-layout-editor #layout-stage [data-resize="bottom"] { transform: translate(-50%, 50%); }
+.editor-overflow { position: absolute; inset: 0; display: grid; place-items: center; color: #656c87; font: 400 13px Inter, sans-serif; background: #f6f6f6bf; border-radius: inherit; }
+.broadcast:has(#layout-editor.embedded-layout-editor[open])::after { display: none; }
 .broadcast-settings h2 {
   margin: 0;
   font-size: 15px;
@@ -316,13 +422,13 @@
   .broadcast-mic.broadcast-active::after { left: 8px; }
 }
 
-.prototype[data-window-size="wide"] .broadcast {
+.prototype:is([data-window-size="wide"], [data-window-size="narrow"]) .broadcast {
   container: broadcast-window / size;
 }
-.prototype[data-window-size="wide"] .broadcast-tools-group {
+.prototype:is([data-window-size="wide"], [data-window-size="narrow"]) .broadcast-tools-group {
   gap: clamp(1px, calc((100cqh - 510px) / 14), 12px);
 }
-.prototype[data-window-size="wide"] .broadcast-tools .broadcast-icon {
+.prototype:is([data-window-size="wide"], [data-window-size="narrow"]) .broadcast-tools .broadcast-icon {
   height: clamp(12px, calc((100cqh - 65px) / 15), 44px);
   font-size: clamp(10px, 4.4cqh, 24px);
 }
@@ -441,7 +547,7 @@
 .broadcast-stage:not(.broadcast-camera-row) :is([data-kind="side"], [data-kind="overlay"]):is([data-shape="square"], [data-shape="circle"]):not([data-even]) {
   --camera-width: calc(var(--camera-size) * 9 / 16);
 }
-.broadcast-vertical-cameras :is([data-kind="side"], [data-kind="overlay"]):is([data-shape="square"], [data-shape="circle"]):not([data-even]) {
+.broadcast-stage.broadcast-vertical-cameras:not(.broadcast-camera-row) :is([data-kind="side"], [data-kind="overlay"]):is([data-shape="square"], [data-shape="circle"]):not([data-even]) {
   --stack-count: var(--overflow-slots, 4);
   --camera-width: min(calc(var(--camera-size) * 9 / 16), calc((100cqh - 4px * (var(--stack-count) - 1)) / var(--stack-count)));
 }

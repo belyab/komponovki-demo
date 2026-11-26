@@ -101,9 +101,13 @@
       </aside>
       <dialog id="layout-editor" aria-label="Редактирование компоновки">
         <header class="layout-editor-bar">
-          <button type="button" data-command="templates">Компоновка</button>
-          <button type="button" data-command="previous" aria-label="Предыдущий шаблон"><img src="assets/layout-arrow.svg" alt=""></button>
-          <button type="button" data-command="next" aria-label="Следующий шаблон"><img src="assets/layout-arrow.svg" alt=""></button>
+          <div class="editor-template-controls">
+            <div class="editor-template-arrows">
+              <button type="button" data-command="previous" aria-label="Предыдущий шаблон"><span aria-hidden="true">&#xe9a9;</span></button>
+              <button type="button" data-command="next" aria-label="Следующий шаблон"><span aria-hidden="true">&#xe9a9;</span></button>
+            </div>
+            <button type="button" data-command="templates">Шаблон</button>
+          </div>
           <span class="editor-spacer"></span>
           <button type="button" data-command="undo" aria-label="Отменить изменение">&#xe6cf;</button>
           <button type="button" data-command="redo" aria-label="Повторить изменение">&#xe6ca;</button>
@@ -153,9 +157,10 @@
       </aside>
       <section class="broadcast-settings" id="broadcast-settings" role="dialog" aria-label="Настройки трансляции" hidden>
         <div class="broadcast-settings-content">
+          <div id="broadcast-settings-preview"></div>
           <section class="broadcast-settings-layouts" aria-labelledby="broadcast-settings-title">
-            <h2 id="broadcast-settings-title">Компоновки</h2>
-            <div class="composition-grid" id="broadcast-settings-layouts"></div>
+            <h2 id="broadcast-settings-title">Компоновка на сцене</h2>
+            <div id="broadcast-settings-layouts"></div>
           </section>
           <div class="broadcast-settings-reactions">
             <section>
@@ -196,6 +201,7 @@
         <select id="preview-window-size">
           <option value="standard">1024 × 768 (4:3)</option>
           <option value="wide">1280 × 720 (16:9)</option>
+          <option value="narrow" hidden>1260 × 540 (21:9) — низкое</option>
         </select>
       </label>
       <div class="options">
@@ -213,6 +219,9 @@
             <label><input type="radio" name="scene" value="material">Только презентация</label>
           </div>
         </fieldset>
+        <div class="option broadcast-screen-share-option">
+          <label><input type="checkbox" name="screenShare" value="true">Скриншер (показ экрана)</label>
+        </div>
         <fieldset class="broadcast-option" id="broadcast-shape-options">
           <legend>Форма</legend>
           <div class="option">

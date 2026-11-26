@@ -27,29 +27,48 @@
     { name: 'Тимур Ахметов', sprite: 7 },
   ];
   const templateShapes = ['rectangle', 'rectangle', 'circle', 'rectangle'];
-  let pendingScene;
+  let customCameraSize;
+  let settingsInitialConfig;
+
+  function sceneState() {
+    const selected = controls.elements.scene.value;
+    const screenShare = controls.elements.screenShare.checked;
+    const cameraCount = selected === 'material' ? 0 : Number(controls.elements.count.value);
+    return { selected, screenShare, cameraCount, count: cameraCount + Number(screenShare),
+      scene: selected === 'material' && screenShare ? 'both' : selected };
+  }
 
   function renderSettingsLayouts() {
-    const multiple = Number(controls.elements.count.value) > 1;
-    const choices = multiple
-      ? [['cameras', 'group'], ['both', 'groupSide']]
-      : [['cameras', 'host'], ['both', 'side'], ['material', 'material']];
-    settingsLayouts.innerHTML = choices.map(([scene, id]) => {
-      const { label, markup } = window.webinarLayouts.preview(id);
-      return '<div class="composition-tile"><button type="button" class="layout-card" data-settings-scene="' + scene +
-        '" aria-label="' + label + '" aria-pressed="' + (pendingScene === scene) + '">' + markup + '</button></div>';
-    }).join('');
+    window.webinarLayouts.endEmbedded();
+    const { scene, count } = sceneState();
+    const art = stage.querySelector('.composition-art');
+    if (!art) return;
+    const id = scene === 'material' ? 'material' : scene === 'both'
+      ? (count > 1 ? 'groupSide' : 'side') : (count > 1 ? 'group' : 'host');
+    const template = Number(controls.elements.template.value);
+    // Use the same representative previews as the webinar card, not the live participant count.
+    const slots = count > 1 ? 4 : count;
+    const config = { kind: art.dataset.kind, shape: art.dataset.shape,
+      ...(scene === 'both' && { template, corner: positionSelect.value, size: parseFloat(art.style.getPropertyValue('--camera-request')) }) };
+    settingsInitialConfig = { ...config };
+    window.webinarLayouts.beginEmbedded(settingsLayouts, id, config, {
+      slots,
+      columns: scene === 'cameras' && slots > 1 ? 2 : 1,
+      sceneWidth: art.clientWidth,
+    });
   }
 
   function openSettings() {
-    pendingScene = controls.elements.scene.value;
-    renderSettingsLayouts();
     settingsPanel.hidden = false;
     settingsButton.setAttribute('aria-expanded', 'true');
-    settingsLayouts.querySelector('[aria-pressed="true"], .layout-card')?.focus({ preventScroll: true });
+    const preview = byId('broadcast-settings-preview');
+    if (!preview.firstElementChild) preview.append(card.querySelector('.preview-panel').cloneNode(true));
+    renderSettingsLayouts();
+    settingsPanel.querySelector('.broadcast-settings-content').scrollTop = 0;
   }
 
-  function closeSettings(restoreFocus = true) {
+  function closeSettings(restoreFocus = true, commit = false) {
+    window.webinarLayouts.endEmbedded(commit);
     settingsPanel.hidden = true;
     settingsButton.setAttribute('aria-expanded', 'false');
     if (restoreFocus) settingsButton.focus({ preventScroll: true });
@@ -59,23 +78,29 @@
     if (settingsPanel.hidden) openSettings();
     else closeSettings();
   });
-  settingsLayouts.addEventListener('click', event => {
-    const tile = event.target.closest('[data-settings-scene]');
-    if (!tile) return;
-    pendingScene = tile.dataset.settingsScene;
-    for (const button of settingsLayouts.querySelectorAll('[data-settings-scene]')) {
-      button.setAttribute('aria-pressed', String(button === tile));
-    }
-  });
   byId('broadcast-settings-apply').addEventListener('click', () => {
-    controls.elements.scene.value = pendingScene;
-    closeSettings();
+    const config = window.webinarLayouts.embeddedConfig();
+    if (config) {
+      controls.elements.shape.value = config.shape;
+      if (Number.isFinite(config.template)) {
+        controls.elements.template.value = String(config.template);
+        selectedCorner = config.corner ?? 'tr';
+        if (config.size !== settingsInitialConfig?.size || config.template !== settingsInitialConfig?.template) {
+          customCameraSize = config.size;
+          const size = controls.elements.cameraSize;
+          if (!size.querySelector('[value="custom"]')) size.add(new Option('Настроенный', 'custom'));
+          size.value = 'custom';
+        }
+      }
+    }
+    closeSettings(true, true);
     render();
   });
   byId('broadcast-settings-close').addEventListener('click', () => closeSettings());
   document.addEventListener('keydown', event => {
     if (event.key === 'Escape' && !settingsPanel.hidden) {
       event.preventDefault();
+      if (window.webinarLayouts.dismissEmbeddedMenu()) return;
       closeSettings();
     }
   });
@@ -88,6 +113,15 @@
         ';--sprite-row:' + Math.floor(sprite / 2) + '"></span>';
     return '<span class="camera-picture">' + picture + '</span><span class="broadcast-name" title="' + name + '"><span class="broadcast-name-text">' + name +
       '</span><span class="broadcast-speaking" role="img" aria-label="Говорит"></span></span>';
+  }
+
+  function screenShareVisual() {
+    return '<span class="camera-picture broadcast-screen-picture" role="img" aria-label="Демонстрация рабочего стола">' +
+      '<span class="screen-share-desktop"><span class="screen-share-browser"><i></i><i></i><i></i><span></span></span>' +
+      '<span class="screen-share-page"><span class="screen-share-sidebar"><i></i><i></i><i></i><i></i></span>' +
+      '<span class="screen-share-document"><strong>План вебинара</strong><span></span><span></span><span></span>' +
+      '<span class="screen-share-chart"><i></i><i></i><i></i><i></i><i></i></span><span></span></span></span></span></span>' +
+      '<span class="broadcast-name" title="Показ экрана"><span class="broadcast-name-text">Показ экрана</span></span>';
   }
 
   function overflowAvatars(first, count) {
@@ -104,6 +138,40 @@
 
   function overflowBadge(count) {
     return '<span class="broadcast-overflow-badge" aria-label="Ещё ' + count + ' камер">+' + count + '</span>';
+  }
+
+  function positionOverlay() {
+    if (stage.classList.contains('broadcast-camera-row')) return;
+    const overlay = stage.querySelector('[data-kind="overlay"] .camera-windows');
+    if (!overlay) return;
+    const art = overlay.closest('.composition-art');
+    const presentation = art.querySelector('.material-window').getBoundingClientRect();
+    const area = art.querySelector('.composition-panels').getBoundingClientRect();
+    const corner = art.dataset.corner;
+    overlay.style.left = '';
+    overlay.style.right = '';
+    overlay.style.top = '';
+    overlay.style.bottom = '';
+    const camera = overlay.getBoundingClientRect();
+    const css = getComputedStyle(overlay);
+    const marginLeft = parseFloat(css.marginLeft) || 0;
+    const marginRight = parseFloat(css.marginRight) || 0;
+    const marginTop = parseFloat(css.marginTop) || 0;
+    const desiredLeft = corner.endsWith('r')
+      ? presentation.right - camera.width - marginRight
+      : presentation.left + marginLeft;
+    const left = Math.max(area.left, Math.min(desiredLeft, area.right - camera.width));
+    overlay.style.left = left - area.left - marginLeft + 'px';
+    overlay.style.right = 'auto';
+
+    // Keep the existing top/bottom position when it already overlaps the slide.
+    // If letterboxing separates the camera entirely from the slide, anchor it to the slide vertically as well.
+    if (camera.bottom <= presentation.top || camera.top >= presentation.bottom) {
+      const desiredTop = corner.startsWith('t') ? presentation.top + marginTop : presentation.bottom - camera.height;
+      const top = Math.max(area.top, Math.min(desiredTop, area.bottom - camera.height));
+      overlay.style.top = top - area.top - marginTop + 'px';
+      overlay.style.bottom = 'auto';
+    }
   }
 
   function positionSlides() {
@@ -131,12 +199,12 @@
   }
 
   let capacityKey;
-  function sceneCapacity(scene, count, row) {
+  function sceneCapacity(scene, count, row, draft = {}) {
     if (count <= 1 || scene === 'material') return {};
     const css = getComputedStyle(stage);
     const height = stage.clientHeight - parseFloat(css.paddingTop) - parseFloat(css.paddingBottom);
     const width = stage.clientWidth - parseFloat(css.paddingLeft) - parseFloat(css.paddingRight);
-    if (stage.classList.contains('broadcast-half-grid')) {
+    if (draft.halfGrid ?? stage.classList.contains('broadcast-half-grid')) {
       const halfWidth = Math.min((width - 4) / 2, height * 16 / 9);
       const minimum = Math.max(1, Math.min(144, halfWidth, height));
       const maxColumns = Math.max(1, Math.floor((halfWidth + 4) / (minimum + 4)));
@@ -156,7 +224,7 @@
     }
     if (row) {
       const stripHeight = Math.min(parseFloat(css.getPropertyValue('--camera-strip-request')), height * 0.24);
-      const ratio = controls.elements.shape.value === 'rectangle' ? 16 / 9 : 1;
+      const ratio = (draft.shape ?? controls.elements.shape.value) === 'rectangle' ? 16 / 9 : 1;
       const gap = 4;
       const cameraWidth = stripHeight * ratio;
       const fullCapacity = Math.floor((width + gap) / (cameraWidth + gap));
@@ -167,7 +235,7 @@
       return { slots: Math.min(count, full + 3), compactFrom: full };
     }
     if (scene === 'cameras') {
-      const columns = Math.max(2, Math.min(4, Math.floor((width + 4) / 128)));
+      const columns = Math.max(2, Math.min(4, Math.ceil(Math.sqrt(count)), Math.floor((width + 4) / 128)));
       const rows = Math.max(1, Math.floor((height + 4) / 76));
       if (count === 4 && columns * rows >= count) return {};
       return { slots: Math.min(count, columns * rows), columns };
@@ -179,16 +247,16 @@
   new ResizeObserver(() => {
     if (screen.hidden) return;
     const row = stage.classList.contains('broadcast-camera-row');
-    const current = sceneCapacity(controls.elements.scene.value, Number(controls.elements.count.value), row);
+    const { scene, count } = sceneState();
+    const current = sceneCapacity(scene, count, row);
     if (JSON.stringify(current) !== capacityKey) render();
-    else positionSlides();
+    else { positionOverlay(); positionSlides(); }
   }).observe(stage);
 
   function render() {
     const settings = new FormData(controls);
-    const count = Number(settings.get('count'));
+    const { selected, scene, count, screenShare, cameraCount } = sceneState();
     const multiple = count > 1;
-    const scene = settings.get('scene');
     const id = scene === 'material' ? 'material' : scene === 'both'
       ? (multiple ? 'groupSide' : 'side') : (multiple ? 'group' : 'host');
     const template = Number(controls.elements.template.value);
@@ -211,14 +279,14 @@
     const row = canUseRow && ['top', 'bottom'].includes(positionSelect.value);
     const bottomRow = row && positionSelect.value === 'bottom';
     const corner = scene === 'both' && !row ? positionSelect.value : undefined;
-    const shape = settings.get('shape');
+    const shape = cameraCount ? settings.get('shape') : 'rectangle';
     const overlayBottomRight = scene === 'both' && (template === 1 || template === 2) && corner === 'br';
     const canResize = scene === 'both' && (!half || multiple);
     const cameraSize = byId('broadcast-size-options');
     cameraSize.hidden = !canResize;
     const sizes = { small: 12, maximum: template === 0 ? 49.99 : 50 };
     const standard = overlayBottomRight && !multiple && shape === 'rectangle' ? 26 : undefined;
-    const size = canResize ? sizes[settings.get('cameraSize')] ?? standard : undefined;
+    const size = canResize ? (settings.get('cameraSize') === 'custom' ? customCameraSize : sizes[settings.get('cameraSize')] ?? standard) : undefined;
     slides.hidden = scene === 'cameras';
     stage.classList.toggle('broadcast-overlay-bottom-right', overlayBottomRight);
     const sideStack = !row && scene === 'both' && template === 0 && multiple;
@@ -227,7 +295,9 @@
     stage.classList.toggle('broadcast-row-bottom', bottomRow);
     stage.classList.toggle('broadcast-half-grid', scene === 'both' && half && multiple && shape !== 'rectangle');
     const stripHeight = { small: '72px', standard: '100px', maximum: '124px' };
-    stage.style.setProperty('--camera-strip-request', stripHeight[settings.get('cameraSize')]);
+    stage.style.setProperty('--camera-strip-request', settings.get('cameraSize') === 'custom'
+      ? Math.max(40, Math.min(124, (customCameraSize ?? 23) / 23 * 100)) + 'px'
+      : stripHeight[settings.get('cameraSize')]);
     const verticalCameras = scene === 'both' && multiple && !row;
     stage.classList.toggle('broadcast-vertical-cameras', verticalCameras);
     stage.classList.toggle('broadcast-stage-with-slides', !slides.hidden && !overlayBottomRight && !verticalCameras && !bottomRow);
@@ -237,6 +307,8 @@
     stage.classList.toggle('broadcast-overflow', Boolean(slots));
     stage.style.setProperty('--camera-grid-columns', columns ?? 4);
     const hiddenCount = slots && slots < count ? count - slots + 1 : 0;
+    const cameraIndex = index => index - Number(screenShare);
+    const cameraAt = index => screenShare && index === 0 ? screenShareVisual() : cameraVisual(cameraIndex(index));
     stage.innerHTML = window.webinarLayouts.draw(id, {
       template,
       corner,
@@ -244,23 +316,32 @@
       size,
       slots,
       compactFrom,
-      camera: index => hiddenCount && index === slots - 1
-        ? row ? cameraVisual(index) + overflowBadge(hiddenCount) : overflowAvatars(index, count)
-        : cameraVisual(index),
+      screenShare,
+      camera: index => hiddenCount && index === slots - 1 && !(screenShare && index === 0)
+        ? row ? cameraAt(index) + overflowBadge(hiddenCount) : overflowAvatars(cameraIndex(index), cameraCount)
+        : cameraAt(index),
       material: `<span class="broadcast-slide-image" role="img" aria-label="Business Presentation">
         <img src="assets/broadcast/6a54b.png" alt="" draggable="false">
       </span><span class="broadcast-name">Вы</span>`,
     });
+    positionOverlay();
     positionSlides();
     byId('broadcast-template-options').hidden = scene !== 'both';
-    byId('broadcast-shape-options').hidden = scene === 'material';
-    byId('broadcast-count-options').hidden = scene === 'material';
-    share.classList.toggle('broadcast-active', scene !== 'cameras');
+    byId('broadcast-shape-options').hidden = !cameraCount;
+    byId('broadcast-count-options').hidden = selected === 'material';
+    share.classList.toggle('broadcast-active', scene !== 'cameras' || screenShare);
+    share.setAttribute('aria-label', screenShare ? 'Показ экрана' : 'Показ презентации');
   }
 
   document.querySelector('.system').addEventListener('change', event => {
     if (event.target.name !== 'view') return;
     const live = event.target.value === 'broadcast';
+    const windowSize = byId('preview-window-size');
+    windowSize.querySelector('[value="narrow"]').hidden = !live;
+    if (!live && windowSize.value === 'narrow') {
+      windowSize.value = 'standard';
+      windowSize.dispatchEvent(new Event('change'));
+    }
     card.hidden = live;
     screen.hidden = !live;
     controls.hidden = !live;
@@ -277,10 +358,7 @@
     if (event.target.name === 'template') {
       controls.elements.shape.value = templateShapes[Number(event.target.value)];
     }
-    if (!settingsPanel.hidden && ['scene', 'count'].includes(event.target.name)) {
-      pendingScene = controls.elements.scene.value;
-      renderSettingsLayouts();
-    }
     render();
+    if (!settingsPanel.hidden) renderSettingsLayouts();
   });
 })();
