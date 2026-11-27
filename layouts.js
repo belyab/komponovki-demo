@@ -32,6 +32,7 @@
   let cameraIndex = 0;
   let skipClick = false;
   let embedded = null;
+  let sharedEditorClose;
   const embeddedSavedTemplates = new Map();
   const activeCameraCount = () => embedded?.slots ?? scenarios[editingId].cameras;
   const activeTemplateStore = () => embedded ? embeddedSavedTemplates : savedTemplates;
@@ -87,7 +88,8 @@
     if (focusId) grid.querySelector('[' + (focusEdit ? 'data-edit' : 'data-select') + '="' + focusId + '"]')?.focus();
   }
 
-  function openEditor(id) {
+  function openEditor(id, onClose) {
+    sharedEditorClose = onClose;
     editingId = id;
     history = [saved[id]];
     step = 0;
@@ -402,9 +404,13 @@
 
   editor.addEventListener('close', () => {
     const id = editingId;
+    const onClose = sharedEditorClose;
+    sharedEditorClose = undefined;
     gesture = null;
     skipClick = false;
-    renderCards(id, true);
+    renderCards(onClose ? undefined : id, true);
+    document.dispatchEvent(new CustomEvent('webinar-layouts-updated', { detail: { id } }));
+    onClose?.();
   });
 
   window.webinarLayouts = Object.freeze({
@@ -446,6 +452,13 @@
     preview(id) {
       return { label: scenarios[id].label, markup: art(id, defaults(id)) };
     },
+    sharedGroups() {
+      return groups.map(group => ({ label: group.label, ids: group.ids.map(id => ({ id, ...scenarios[id], markup: art(id, saved[id]) })) }));
+    },
+    sharedPreview(id, visuals) {
+      return { ...scenarios[id], markup: art(id, saved[id], false, visuals) };
+    },
+    editShared(id, onClose) { if (scenarios[id]?.cameras) openEditor(id, onClose); },
     draw(id, { template, shape, corner, size, ...visuals }) {
       const config = scenarios[id].material && scenarios[id].cameras
         ? templateFor(id, template) : defaults(id);

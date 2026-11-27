@@ -20,6 +20,7 @@
         </header>
         <div class="workspace">
           <div class="content" id="content">
+            <div id="card-transmission">
             <section class="preview-panel" aria-label="Оформление превью трансляции">
               <div class="preview-controls">
                 <span class="logo-control"><span class="kit-icon" aria-hidden="true">&#xe671;</span>Логотип</span>
@@ -67,6 +68,14 @@
                 <button type="button" aria-label="Разрешить запрос голоса" aria-pressed="true"><img src="assets/reactions/wave.png" alt="" width="32" height="34"></button>
               </div>
             </section>
+            </div>
+            <section id="card-plan" class="webinar-plan" aria-label="План вебинара" hidden>
+              <header class="plan-toolbar">
+                <button type="button" class="plan-add" id="plan-add-row" aria-label="Добавить пункт"><span class="kit-icon" aria-hidden="true">&#xeadd;</span></button>
+                <div class="plan-view-switch"><span class="plan-view-active">Внутренний план</span><span>Для участников</span></div>
+              </header>
+              <div class="plan-list" id="plan-list"></div>
+            </section>
           </div>
           <aside class="card-tabs" aria-label="Вкладки карточки">
             <ul>
@@ -75,8 +84,9 @@
               <li>Параметры</li>
               <li>Оформление</li>
               <li>Рассылка</li>
+              <li data-card-tab="plan"><button type="button" aria-controls="card-plan">План</button></li>
               <li>Материалы</li>
-              <li aria-current="true">Трансляция</li>
+              <li data-card-tab="transmission" aria-current="true"><button type="button" aria-controls="card-transmission" aria-current="page">Трансляция</button></li>
               <li>Реклама</li>
               <li>Вопросы <small>2</small></li>
               <li>Опросы <small>1</small></li>
@@ -99,6 +109,8 @@
           <button aria-label="Справка" id="help"><img src="assets/d9537.svg" alt=""></button>
         </div>
       </aside>
+      <section id="plan-layout-menu" class="plan-layout-menu" role="dialog" aria-label="Шаблоны компоновок" hidden></section>
+      <section id="plan-material-panel" class="plan-material-panel" role="dialog" aria-label="Материалы" hidden></section>
       <dialog id="layout-editor" aria-label="Редактирование компоновки">
         <header class="layout-editor-bar">
           <div class="editor-template-controls">
