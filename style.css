@@ -479,10 +479,18 @@ dialog{border:0;border-radius:14px;padding:20px;box-shadow:0 12px 56px #0003;min
 #layout-stage :not([data-kind="camera"]) .camera-window { cursor: grab; }
 #layout-stage [data-dragging] .camera-window { cursor: grabbing; }
 #layout-stage .camera-window:is(:hover, :focus-visible, .camera-selected) {
-  outline: 1.5px solid #7b62f8;
-  outline-offset: 0;
+  outline: none;
 }
-#layout-stage .camera-window.camera-selected { outline-width: 2px; }
+#layout-stage .camera-window:is(:hover, :focus-visible, .camera-selected)::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  border: 1.5px solid #7b62f8;
+  border-radius: inherit;
+  pointer-events: none;
+}
+#layout-stage .camera-window.camera-selected::after { border-width: 2px; }
 .camera-resize {
   position: absolute;
   z-index: 1;

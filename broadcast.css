@@ -233,6 +233,26 @@
   overflow: visible;
 }
 #layout-editor.embedded-layout-editor :is([data-command="apply"], [data-command="close"]) { display: none; }
+.broadcast-settings-inline #broadcast-settings-preview .stage { min-height: 0; overflow: visible; }
+.broadcast-settings-inline #broadcast-settings-preview .sections { border-radius: 0 14px 14px 0; }
+.broadcast-settings-inline #broadcast-settings-preview .video { display: flex; flex-direction: column; min-width: 0; }
+.broadcast-settings-inline #broadcast-settings-preview .video-label { flex-shrink: 0; }
+.broadcast-settings-inline #layout-editor.embedded-layout-editor {
+  display: flex;
+  flex-direction: column-reverse;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  background: transparent;
+  box-shadow: none;
+  border-radius: 0;
+}
+.broadcast-settings-inline #layout-editor .layout-editor-bar { min-height: 38px; gap: 2px; }
+.broadcast-settings-inline #layout-editor .layout-editor-bar button:not([data-command="templates"]) { width: 28px; height: 28px; }
+.broadcast-settings-inline #layout-editor .layout-editor-bar :is([data-command="previous"], [data-command="next"]) { width: 24px; height: 24px; }
+.broadcast-settings-inline #layout-editor .layout-editor-bar [data-command="templates"] { font-size: 14px; }
+.broadcast-settings-inline #layout-stage { flex: none; width: 100%; aspect-ratio: 16 / 9; }
+.broadcast-settings-inline .broadcast-settings-reactions { margin-top: 0; }
 #layout-editor.embedded-layout-editor #layout-stage .composition-art {
   --camera-size: var(--camera-request);
   --embedded-ratio: 16 / 9;

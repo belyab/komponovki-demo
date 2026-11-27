@@ -51,11 +51,20 @@
     const config = { kind: art.dataset.kind, shape: art.dataset.shape,
       ...(scene === 'both' && { template, corner: positionSelect.value, size: parseFloat(art.style.getPropertyValue('--camera-request')) }) };
     settingsInitialConfig = { ...config };
-    window.webinarLayouts.beginEmbedded(settingsLayouts, id, config, {
+    window.webinarLayouts.beginEmbedded(settingsEditorContainer(), id, config, {
       slots,
       columns: scene === 'cameras' && slots > 1 ? 2 : 1,
       sceneWidth: art.clientWidth,
     });
+  }
+
+  function settingsEditorContainer() {
+    const inline = controls.elements.settingsVariant.value === 'inline';
+    settingsPanel.classList.toggle('broadcast-settings-inline', inline);
+    settingsLayouts.closest('.broadcast-settings-layouts').hidden = inline;
+    const preview = byId('broadcast-settings-preview');
+    preview.querySelector('.video-preview').hidden = inline;
+    return inline ? preview.querySelector('.video') : settingsLayouts;
   }
 
   function openSettings() {
@@ -63,6 +72,7 @@
     settingsButton.setAttribute('aria-expanded', 'true');
     const preview = byId('broadcast-settings-preview');
     if (!preview.firstElementChild) preview.append(card.querySelector('.preview-panel').cloneNode(true));
+    byId('broadcast-settings-variant-options').hidden = false;
     renderSettingsLayouts();
     settingsPanel.querySelector('.broadcast-settings-content').scrollTop = 0;
   }
@@ -70,6 +80,7 @@
   function closeSettings(restoreFocus = true, commit = false) {
     window.webinarLayouts.endEmbedded(commit);
     settingsPanel.hidden = true;
+    byId('broadcast-settings-variant-options').hidden = true;
     settingsButton.setAttribute('aria-expanded', 'false');
     if (restoreFocus) settingsButton.focus({ preventScroll: true });
   }
@@ -352,6 +363,13 @@
 
   controls.addEventListener('submit', event => event.preventDefault());
   controls.addEventListener('change', event => {
+    if (event.target.name === 'settingsVariant') {
+      if (!settingsPanel.hidden) {
+        window.webinarLayouts.moveEmbedded(settingsEditorContainer());
+        settingsPanel.querySelector('.broadcast-settings-content').scrollTop = 0;
+      }
+      return;
+    }
     if (event.target === positionSelect) {
       selectedCorner = positionSelect.value;
     }

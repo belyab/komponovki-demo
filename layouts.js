@@ -164,9 +164,12 @@
   function positionTemplateMenu() {
     const dialogBox = editor.getBoundingClientRect();
     const buttonBox = editor.querySelector('[data-command=templates]').getBoundingClientRect();
+    const inlineContent = embedded && editor.closest('.broadcast-settings-inline')
+      ? editor.closest('.broadcast-settings-content') : null;
+    const bounds = (inlineContent || (embedded ? editor.closest('.broadcast-settings') : mockup)).getBoundingClientRect();
+    if (inlineContent) options.style.maxHeight = Math.max(0, bounds.height - 12) + 'px';
     const menuBox = options.getBoundingClientRect();
     const headingBox = options.querySelector('.template-heading h3').getBoundingClientRect();
-    const bounds = (embedded ? editor.closest('.broadcast-settings') : mockup).getBoundingClientRect();
     const width = options.offsetWidth;
     // Align the menu heading with the trigger text, not the menu's center.
     const minLeft = Math.max(bounds.left, 0) + 6;
@@ -178,7 +181,9 @@
     options.style.left = left - dialogBox.left + 'px';
     const buttonTextCenterY = buttonBox.top + buttonBox.height / 2 + 1;
     const headingCenterOffset = headingBox.top - menuBox.top + headingBox.height / 2;
-    options.style.top = buttonTextCenterY - headingCenterOffset - dialogBox.top + 'px';
+    const desiredTop = buttonTextCenterY - headingCenterOffset;
+    const top = inlineContent ? Math.max(bounds.top + 6, Math.min(desiredTop, bounds.bottom - options.offsetHeight - 6)) : desiredTop;
+    options.style.top = top - dialogBox.top + 'px';
   }
 
   function positionShapeMenu(camera) {
@@ -417,6 +422,11 @@
       renderEditor();
     },
     embeddedConfig() { return embedded ? { ...history[step] } : null; },
+    moveEmbedded(container) {
+      if (!embedded) return;
+      container.append(editor);
+      renderEditor();
+    },
     endEmbedded(commit = false) {
       if (!embedded) return;
       if (commit && scenarios[editingId].material) {
