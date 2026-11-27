@@ -251,6 +251,7 @@
 .broadcast-settings-inline #layout-editor .layout-editor-bar button:not([data-command="templates"]) { width: 28px; height: 28px; }
 .broadcast-settings-inline #layout-editor .layout-editor-bar :is([data-command="previous"], [data-command="next"]) { width: 24px; height: 24px; }
 .broadcast-settings-inline #layout-editor .layout-editor-bar [data-command="templates"] { font-size: 14px; }
+.broadcast-settings-inline #layout-editor .editor-template-controls:has([data-command="templates"]:disabled) { display: none; }
 .broadcast-settings-inline #layout-stage { flex: none; width: 100%; aspect-ratio: 16 / 9; }
 .broadcast-settings-inline .broadcast-settings-reactions { margin-top: 0; }
 #layout-editor.embedded-layout-editor #layout-stage .composition-art {
